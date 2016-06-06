@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<system xmlns="http://www.eiffel.com/developers/xml/configuration-1-15-0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.eiffel.com/developers/xml/configuration-1-15-0 http://www.eiffel.com/developers/xml/configuration-1-15-0.xsd" name="eav" uuid="1912A20F-93A5-4113-66C1-000002C232A0" readonly="false">
+	<description>eav implementation</description>
+	<target name="eav">
+		<root all_classes="true"/>
+		<option warning="true" void_safety="transitional" syntax="provisional">
+			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
+		</option>
+		<setting name="console_application" value="true"/>
+		<library name="base" location="$ISE_LIBRARY\library\base\base-safe.ecf"/>
+		<library name="framework" location="$GITHUB\framework\framework.ecf"/>
+		<library name="randomizer" location="$GITHUB\randomizer\randomizer.ecf"/>
+		<library name="sqlite" location="$ISE_LIBRARY\unstable\library\persistency\database\sqlite3\sqlite-safe.ecf"/>
+		<library name="test_extension" location="$GITHUB\test_extension\test_extension.ecf"/>
+		<library name="time" location="$ISE_LIBRARY\library\time\time-safe.ecf"/>
+		<library name="uuid" location="$ISE_LIBRARY\library\uuid\uuid-safe.ecf"/>
+		<cluster name="eav" location=".\" recursive="true">
+			<file_rule>
+				<exclude>/.git$</exclude>
+				<exclude>/.svn$</exclude>
+				<exclude>/CVS$</exclude>
+				<exclude>/EIFGENs$</exclude>
+				<exclude>tests</exclude>
+			</file_rule>
+		</cluster>
+	</target>
+	<target name="test" extends="eav">
+		<description>eav Tests</description>
+		<root class="ANY" feature="default_create"/>
+		<file_rule>
+			<exclude>/.git$</exclude>
+			<exclude>/.svn$</exclude>
+			<exclude>/CVS$</exclude>
+			<exclude>/EIFGENs$</exclude>
+			<include>tests</include>
+		</file_rule>
+		<option profile="false">
+		</option>
+		<setting name="console_application" value="false"/>
+		<library name="testing" location="$ISE_LIBRARY\library\testing\testing-safe.ecf"/>
+		<cluster name="tests" location=".\tests\" recursive="true"/>
+	</target>
+</system>
