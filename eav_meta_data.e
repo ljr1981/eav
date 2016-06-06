@@ -16,5 +16,7 @@ feature -- Access
 
 	name: STRING
 			-- `name' of Current {EAV_META_DATA} item.
+		deferred
+		end
 
 end
