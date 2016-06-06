@@ -11,9 +11,13 @@ inherit
 
 feature -- Access
 
-	parent,
+	parent_id,
 	id: INTEGER_64
-			-- `id' (or parent) of Current {EAV_COMMON}.
+			-- Required `id' (or parent) of Current {EAV_COMMON}.
+			-- `parent_id' is zero if detached `parent'.
+
+	parent: detachable like Current
+			-- Optional (detachable) `parent' of Current {EAV_COMMON}.
 
 	is_deleted: BOOLEAN
 			-- `is_deleted'?
@@ -26,5 +30,10 @@ feature -- Access
 
 	modifier_id: INTEGER_64
 			-- `modifier_id' of the modifying Entity instance.
+
+invariant
+	valid_parent_id: not attached parent implies parent_id = 0
+	id_consistency: modifier_id > 0 implies id > 0
+	deletion_consistency: is_deleted implies (modifier_id > 0 and id > 0)
 
 end

@@ -30,7 +30,7 @@ feature -- Test routines
 			l_table: EAV_COMMON
 			l_meta: EAV_META_DATA
 		do
-			do_nothing
+			create l_system.make_with_data (1, "test", (create {RANDOMIZER}).uuid)
 		end
 
 end

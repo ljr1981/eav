@@ -8,6 +8,6 @@ class
 
 feature -- Documentation
 
-	documentation: detachable EAV_DOCS
+	frozen documentation: detachable EAV_DOCS
 
 ;end
