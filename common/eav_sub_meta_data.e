@@ -6,12 +6,9 @@ note
 deferred class
 	EAV_SUB_META_DATA
 
-inherit
-	EAV_META_DATA
-
 feature -- Access
 
-	meta_parent: EAV_META_DATA
+	meta_parent: detachable EAV_META_DATA
 			-- `meta_parent'
 		deferred
 		end

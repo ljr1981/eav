@@ -7,44 +7,36 @@ class
 	EAV_ATTRIBUTE
 
 inherit
-	EAV_ATTRIBUTE_ACCESSOR
+	EAV_META_DATA
+		rename
+			parent as renamed_attribute,
+			parent_id as renamed_attribute_id,
+			set_parent as set_renamed_attribute,
+			set_parent_id as set_renamed_attribute_id,
+			attached_parent as attached_renamed_attribute
+		end
 
-create
-	make_with_data,
-	make_with_name
-
-feature {NONE} -- Initialization
-
-	make_with_name (a_entity: EAV_ENTITY_ACCESSOR; a_id: like id; a_name: like name; a_uuid: like uuid)
-			-- `make_with_data' for `a_entity' as `a_id', named `a_name' and unique based on `a_uuid'.
-		do
-			make_with_data (a_entity, a_id, a_uuid)
-			set_name (a_name)
-		ensure
-			name_set: name.same_string (a_name)
+	EAV_SUB_META_DATA
+		rename
+			meta_parent as entity
 		end
 
 feature -- Access
 
-	name: STRING
+	entity: detachable EAV_ENTITY
 			-- <Precursor>
-		attribute
-			create Result.make_empty
-		end
-
-feature -- Setters
-
-	set_name (a_name: like name)
-			-- `set_name' with `a_name'
-		do
-			name := a_name
-		ensure
-			set: name ~ a_name
-		end
+			-- Entity of parent {EAV_SYSTEM}.
 
 ;note
 	design_intent: "[
-		Your_text_goes_here
-]"
+		(A)ttribute ::=
+			Attribute_id			<-- INTEGER Primary Key
+			Entity_id				<-- INTEGER Foreign Key to Entity
+			Uuid					<-- UUID of Attribute
+			Name					<-- Possibly non-unique Attribute name (hence the UUID)
+			Is_deleted				<-- Deletion mark
+			Modified_date			<-- Date-time stamp of create/update/delete
+			Modifier_id				<-- Value.Instance_id of last-Modifying entity (person or machine)
+		]"
 
 end
