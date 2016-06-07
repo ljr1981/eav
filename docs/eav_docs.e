@@ -143,9 +143,13 @@ feature {NONE} -- Implementation
 		(2) Tables (e.g. create a new Table, read data about it, update that data, and deletion of it)
 		
 					Create			Read		Update			Delete
-		Database	  x				 x			  x				  x
+		Database	  ‼				 †			  x				  ‡
 		Table		  x				 x			  x				  x
 		Data		  x				 x			  x				  x
+		
+		-------------------------
+		† Possibly not applicable, required, or needed.
+		‡ Definitely not applicable, required, or needed.
 		
 		STEP #1: Give this library the code to do CRUD with databases.
 		]"

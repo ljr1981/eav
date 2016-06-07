@@ -36,6 +36,24 @@ feature {NONE} -- Initialization
 				a_databases as ic_databases
 			loop
 				databases.force ([a_location, create {EAV_DATABASE}.make (a_location, ic_databases.item)], ic_databases.item)
+				check last_added_db: attached databases.at (ic_databases.item) as al_item then build_eav (al_item.db) end
+			end
+		end
+
+feature -- Basic Operations
+
+	build_eav (a_database: EAV_DATABASE)
+		do
+			a_database.build_eav_structure
+		end
+
+	close_all
+			-- `close_all' `databases'.
+		do
+			across
+				databases as ic_databases
+			loop
+				ic_databases.item.db.database.close
 			end
 		end
 
