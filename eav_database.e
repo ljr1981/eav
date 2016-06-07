@@ -1,10 +1,13 @@
-note
+﻿note
 	description: "[
 		Representation of an effected {EAV_DATABASE}.
 		]"
 
 class
 	EAV_DATABASE
+
+inherit
+	RANDOMIZER
 
 create
 	make
@@ -15,11 +18,9 @@ feature {NONE} -- Initialization
 			-- `make' at `a_location' (uri, file-spec, etc) using `a_file_name'.
 			-- For now: This feature presumes a file-based database system.
 		local
-			l_env: EXECUTION_ENVIRONMENT
 			l_full_name: STRING
 		do
-			create l_env
-			l_full_name := l_env.current_working_path.name.out
+			l_full_name := (create {EXECUTION_ENVIRONMENT}).current_working_path.name.out
 			l_full_name.append_character ('\')
 			l_full_name.append (a_location.out)
 			l_full_name.append_character ('\')
@@ -31,8 +32,9 @@ feature {NONE} -- Initialization
 		end
 
 	last_database_path: PATH
+			-- `last_database_path' used.
 
-feature -- EAV Build Operations
+feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 
 	build_eav_structure
 			-- `build_eav_structure'.
@@ -52,6 +54,8 @@ feature -- EAV Build Operations
 			build_real_value
 			build_blob_value
 		end
+
+feature {NONE} -- Implementation: EAV Build Operations
 
 	build_entity
 			-- `build_entity' table (if needed).
@@ -89,17 +93,49 @@ feature -- EAV Build Operations
 			l_modify.execute
 		end
 
-	build_date_value do build_value ("Value_date", agent date_field) end
-	build_character_value do build_value ("Value_character", agent character_field) end
-	build_varchar_value do build_value ("Value_varchar", agent varchar_field) end
-	build_text_value do build_value ("Value_text", agent text_field) end
-	build_numeric_value do build_value ("Value_numeric", agent numeric_field) end
-	build_boolean_value do build_value ("Value_boolean", agent boolean_field) end
-	build_integer_value do build_value ("Value_integer", agent integer_field) end
-	build_float_value do build_value ("Value_float", agent float_field) end
-	build_double_value do build_value ("Value_double", agent double_field) end
-	build_real_value do build_value ("Value_real", agent real_field) end
-	build_blob_value do build_value ("Value_blob", agent blob_field) end
+	build_date_value
+			-- `build_date_value'.
+		do build_value ("Value_date", agent date_field) end
+
+	build_character_value
+			-- `build_character_value'.
+		do build_value ("Value_character", agent character_field) end
+
+	build_varchar_value
+			-- `build_varchar_value'.
+		do build_value ("Value_varchar", agent varchar_field) end
+
+	build_text_value
+			-- `build_text_value'
+		do build_value ("Value_text", agent text_field) end
+
+	build_numeric_value
+			-- `build_numeric_value'.
+		do build_value ("Value_numeric", agent numeric_field) end
+
+	build_boolean_value
+			-- `build_boolean_value'.
+		do build_value ("Value_boolean", agent boolean_field) end
+
+	build_integer_value
+			-- `build_integer_value'.
+		do build_value ("Value_integer", agent integer_field) end
+
+	build_float_value
+			-- `build_float_value'.
+		do build_value ("Value_float", agent float_field) end
+
+	build_double_value
+			-- `build_double_value'.
+		do build_value ("Value_double", agent double_field) end
+
+	build_real_value
+			-- `build_real_value'.
+		do build_value ("Value_real", agent real_field) end
+
+	build_blob_value
+			-- `build_blob_value'.
+		do build_value ("Value_blob", agent blob_field) end
 
 	build_value (a_table_name: STRING; a_item_field_agent: FUNCTION [TUPLE [STRING], STRING])
 			-- `build_varchar_value' table (if needed).
@@ -120,6 +156,111 @@ feature -- EAV Build Operations
 													integer_field ("modifier_id")
 													>>), database)
 			l_modify.execute
+		end
+
+feature -- Database Management Operations
+
+	store (a_entity_name: STRING; a_values: ARRAY [TUPLE [attr_name: STRING; attr_value: detachable ANY]])
+			-- `store' `a_values' of `a_entity_name' into `database'.
+		note
+			design: "[
+				(1) Check for the entity name, if not in Entity, then create it, store the PK
+				(2) For each item in `a_values' (†) ...
+					(2a) Check for the attribute name in Attribute, create it needed, store the PK
+					(2b) Check for existing value and update if found.
+					(2c) Check for existing value and insert if not found.
+				
+				------------------------
+				(†) Check to see if a value is in the Value_* table, but not in the object values
+					list. If we find one, then presume the field to have been removed and mark for
+					deletion in the table.
+				]"
+		do
+			store_entity (a_entity_name)
+			across
+				a_values as ic_values
+			loop
+				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value)
+			end
+		end
+
+feature {TEST_SET_HELPER} -- Implementation: DB Management Ops
+
+	store_entity (a_entity_name: STRING)
+			-- `store_entity' `a_entity_name'.
+		do
+			if has_entity (a_entity_name) then
+				do_nothing -- soon: just get the ent_id
+			else
+				store_new_entity (a_entity_name)
+				recently_found_entities.force (a_entity_name)
+			end
+			last_entity_id := entity_id (a_entity_name)
+		ensure
+			has_entity: has_entity (a_entity_name)
+		end
+
+	store_new_entity (a_entity_name: STRING)
+			-- `store_new_entity' as `a_entity_name'.
+		require
+			not_has: not has_entity (a_entity_name)
+		local
+			l_insert: SQLITE_INSERT_STATEMENT
+		do
+			create l_insert.make ("INSERT INTO Entity (sys_id, ent_uuid, ent_name, is_deleted, modified_date, modifier_id) VALUES (:SYS_ID, :ENT_UUID, :ENT_NAME,:IS_DEL, :MOD_DATE, :MOD_ID);", database)
+			check l_insert_is_compiled: l_insert.is_compiled end
+			database.begin_transaction (False)
+			l_insert.execute_with_arguments ([
+				create {SQLITE_INTEGER_ARG}.make (":SYS_ID", 1),
+				create {SQLITE_STRING_ARG}.make (":ENT_UUID", uuid.out),
+				create {SQLITE_STRING_ARG}.make (":ENT_NAME", a_entity_name),
+				create {SQLITE_INTEGER_ARG}.make (":IS_DEL", 0),
+				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
+				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
+				])
+			database.commit
+		end
+
+	has_entity (a_entity_name: STRING): BOOLEAN
+			-- `has_entity' `a_entity_name'?
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			Result := recently_found_entities.has (a_entity_name)
+			if not Result then
+				create l_query.make ("SELECT ent_name FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
+				l_result := l_query.execute_new
+				l_result.start
+				Result := l_result.item.string_value (1).same_string (a_entity_name)
+			end
+		end
+
+	entity_id (a_entity_name: STRING): INTEGER_64
+			-- `entity_id' of `a_entity_name'.
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			create l_query.make ("SELECT ent_id FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
+			l_result := l_query.execute_new
+			l_result.start
+			Result := l_result.item.integer_64_value (1)
+		end
+
+	last_entity_id: INTEGER_64
+			-- `last_entity_id' of last accessed `entity_id'.
+
+	recently_found_entities: ARRAYED_LIST [STRING]
+			-- `recently_found_entities'.
+		attribute
+			create Result.make (50)
+		end
+
+	store_attribute (a_attribute_name: STRING; a_value: detachable ANY)
+			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
+		do
+
 		end
 
 feature {NONE} -- Implementation: Basic Operations
@@ -152,17 +293,18 @@ feature {NONE} -- Implementation: Basic Operations
 
 feature {NONE} -- Implementation: Constants
 
-	extension: STRING = "sqlite3"
-	create_table: STRING = "CREATE TABLE "
-	check_for_exists: STRING = "IF NOT EXISTS "
-	primary_key: STRING = "PRIMARY KEY "
-	ascending_order: STRING = "ASC "
-	autoincrement: STRING = "AUTOINCREMENT "
+	extension: STRING = "sqlite3" -- `extension'
+	create_table: STRING = "CREATE TABLE " -- `create_table'
+	check_for_exists: STRING = "IF NOT EXISTS " -- `check_for_exists'
+	primary_key: STRING = "PRIMARY KEY " -- `primary_key'
+	ascending_order: STRING = "ASC " -- `ascending_order'
+	autoincrement: STRING = "AUTOINCREMENT " -- `autoincrement'
 
 	date_field,
 	character_field,
 	varchar_field,
 	text_field (a_name: STRING): STRING
+			-- Date, character, varchar, and text fields are all TEXT.
 		do
 			Result := a_name; Result.append (" TEXT ")
 		end
@@ -174,6 +316,7 @@ feature {NONE} -- Implementation: Constants
 
 	boolean_field,
 	integer_field (a_name: STRING): STRING
+			-- Boolean and integer fields are both INTEGER.
 		do
 			Result := a_name; Result.append (" INTEGER ")
 		end
@@ -181,11 +324,13 @@ feature {NONE} -- Implementation: Constants
 	float_field,
 	double_field,
 	real_field (a_name: STRING): STRING
+			-- Floats and doubles are reals.
 		do
 			Result := a_name; Result.append (" REAL ")
 		end
 
 	blob_field (a_name: STRING): STRING
+			-- Blob fields of all sorts.
 		do
 			Result := a_name; Result.append (" BLOB ")
 		end

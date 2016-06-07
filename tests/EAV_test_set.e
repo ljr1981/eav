@@ -26,6 +26,7 @@ inherit
 feature -- Creation Tests
 
 	creation_tests
+			-- `creation_tests'.
 		local
 			l_entity: EAV_ENTITY
 			l_attribute: EAV_ATTRIBUTE
@@ -62,14 +63,14 @@ feature {NONE} -- Implementation
 		end
 
 	remove_data
+			-- `remove_data' from directory path.
 		local
 			l_path: PATH
-			l_env: EXECUTION_ENVIRONMENT
 			l_dir: DIRECTORY
 		do
-			create l_env
-			create l_path.make_from_string (l_env.current_working_path.name.out + "\tests\data\")
+			create l_path.make_from_string ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + "\tests\data\")
 			create l_dir.make_with_path (l_path)
+			l_dir.do_nothing
 			--l_dir.delete_content
 		end
 

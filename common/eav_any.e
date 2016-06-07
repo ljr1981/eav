@@ -9,5 +9,6 @@ class
 feature -- Documentation
 
 	frozen documentation: detachable EAV_DOCS
+			-- `documentation' of Current.
 
 ;end

@@ -9,7 +9,7 @@ deferred class
 inherit
 	EAV_COMMON
 
-feature -- Access
+feature {NONE} -- Implementation
 
 	uuid: UUID
 			-- `uuid' of Current {EAV_META_DATA} item.

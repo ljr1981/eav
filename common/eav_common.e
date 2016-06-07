@@ -9,7 +9,7 @@ deferred class
 inherit
 	EAV_ANY
 
-feature -- Access
+feature {NONE} -- Implementation
 
 	parent_id,
 	id: INTEGER_64

@@ -40,9 +40,20 @@ feature {NONE} -- Initialization
 			end
 		end
 
-feature -- Basic Operations
+feature -- Queries
+
+	first_database: EAV_DATABASE
+			-- `last_database'
+		do
+			check has_content: not databases.is_empty end
+			databases.start
+			Result := databases.item_for_iteration.db
+		end
+
+feature {TEST_SET_BRIDGE} -- Basic Operations
 
 	build_eav (a_database: EAV_DATABASE)
+			-- `build_eav' into `a_database', if needed.
 		do
 			a_database.build_eav_structure
 		end
