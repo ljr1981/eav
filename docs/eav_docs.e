@@ -135,5 +135,19 @@ feature {NONE} -- Implementation
 		]"
 	drawing_palette: "─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼ ═ ║ ╒ ╓ ╔ ╕ ╖ ╗ ╘ ╙ ╚ ╛ ╜ ╝ ╞ ╟ ╠ ╡ ╢ ╣ ╤ ╥ ╦ ╧ ╨ ╩ ╪ ╫ ╬ "
 	EIS: "src=https://en.wikipedia.org/wiki/Entity-attribute-value_model"
+	CRUD: "[
+		CRUD, as applied to data in tables, is only part of what is needed.
+		We also require Create, Read, Update, Delete for:
+		
+		(1) Databases (e.g. create a new DB, read data about it, update that data, and deletion of it)
+		(2) Tables (e.g. create a new Table, read data about it, update that data, and deletion of it)
+		
+					Create			Read		Update			Delete
+		Database	  x				 x			  x				  x
+		Table		  x				 x			  x				  x
+		Data		  x				 x			  x				  x
+		
+		STEP #1: Give this library the code to do CRUD with databases.
+		]"
 
 end

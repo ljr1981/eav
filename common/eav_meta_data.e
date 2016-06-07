@@ -30,7 +30,7 @@ feature -- Setters
 		do
 			name := a_name
 		ensure
-			set: name ~ a_name
+			set: name.same_string (a_name)
 		end
 
 	set_uuid (a_uuid: like uuid)

@@ -30,8 +30,8 @@ feature -- Test routines
 			l_entity: EAV_ENTITY
 			l_attribute: EAV_ATTRIBUTE
 		do
-			create l_system
-			l_system.set_name ("system")
+			create l_system.make ("system", "tests\data")
+			create l_system.make_with_list ("system", "tests\data", <<"eeny", "meeny", "miny", "mo">>)
 
 			create l_entity
 			l_entity.set_name ("entity")

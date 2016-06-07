@@ -16,7 +16,38 @@ inherit
 			attached_parent as attached_parent_system
 		end
 
-note
+create
+	make,
+	make_with_list
+
+feature {NONE} -- Initialization
+
+	make (a_name, a_location: STRING)
+			-- `make' with `a_name'.
+		do
+			make_with_list (a_name, a_location, <<a_name>>)
+		end
+
+	make_with_list (a_name, a_location: STRING; a_databases: ARRAY [STRING])
+			-- `make_with_list' of `a_databases'.
+		do
+			set_name (a_name)
+			across
+				a_databases as ic_databases
+			loop
+				databases.force ([a_location, create {EAV_DATABASE}.make (a_location, ic_databases.item)], ic_databases.item)
+			end
+		end
+
+feature {NONE} -- Implementation
+
+	databases: HASH_TABLE [TUPLE [location: STRING; db: EAV_DATABASE], STRING]
+			-- `databases' based on {EAV_DATABASE} and a name.
+		attribute
+			create Result.make (10)
+		end
+
+;note
 	design_intent: "[
 		EAV_data_model ::=
 			{Meta_data}+			<-- Tables that describe (S)ystems + (E)ntities + (A)ttributes (SEA-key)
