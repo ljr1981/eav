@@ -40,10 +40,12 @@ feature -- Creation Tests
 		do
 			create l_entity
 			l_entity.set_name ("entity")
+			assert_attached ("l_entity", l_entity)
 			remove_data
 
 			create l_attribute
 			l_attribute.set_name ("attribute")
+			assert_attached ("l_attribute", l_attribute)
 			remove_data
 		end
 
@@ -55,7 +57,16 @@ feature -- Creation Tests
 			create l_system.make ("system", test_data_path)
 			l_system.close_all
 			remove_data
+
 			create l_system.make_with_list ("system", test_data_path, <<"eeny", "meeny", "miny", "mo">>)
+			l_system.close_all
+			remove_data
+
+			create l_system.make_empty
+			l_system.close_all
+			remove_data
+
+			create l_system.make_empty_with_system_database
 			l_system.close_all
 			remove_data
 		end

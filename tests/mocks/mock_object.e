@@ -12,14 +12,15 @@ inherit
 feature {TEST_SET_BRIDGE} -- Access
 
 	first_name_dbe: STRING
-			-- `first_name', which is database enabled.
+			-- `first_name_dbe', which is database enabled (dbe).
 		attribute create Result.make_empty end
 
 	last_name_dbe: STRING
-			-- `last_name', which is database enabled.
+			-- `last_name_dbe', which is database enabled (dbe).
 		attribute create Result.make_empty end
 
 	age_dbe: INTEGER
+			-- `age_dbe', which is database enabled (dbe).
 
 feature {TEST_SET_BRIDGE} -- Keys
 

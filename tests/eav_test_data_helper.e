@@ -30,5 +30,6 @@ feature {NONE} -- Implementation
 feature {NONE} -- Implementation: Constants
 
 	test_data_path: STRING = "\tests\data\"
+			-- `test_data_path' location on file system.
 
 end

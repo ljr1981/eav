@@ -18,9 +18,23 @@ inherit
 
 create
 	make,
-	make_with_list
+	make_with_list,
+	make_empty,
+	make_empty_with_system_database
 
 feature {NONE} -- Initialization
+
+	make_empty
+			-- `make_empty'.
+		do
+			do_nothing
+		end
+
+	make_empty_with_system_database
+			-- `make_empty_with_system_database'.
+		do
+			make ("system", (create {PATH}.make_current).name.out)
+		end
 
 	make (a_name, a_location: STRING)
 			-- `make' with `a_name'.

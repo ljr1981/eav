@@ -11,9 +11,16 @@ inherit
 	RANDOMIZER
 
 create
+	make_empty,
 	make
 
 feature {NONE} -- Initialization
+
+	make_empty
+			-- `make_empty' in reasonable default state.
+		do
+			create database.make_open_read_write ("system")
+		end
 
 	make (a_location, a_file_name: READABLE_STRING_GENERAL)
 			-- `make' at `a_location' (uri, file-spec, etc) using `a_file_name'.
@@ -36,6 +43,9 @@ feature {NONE} -- Initialization
 
 	last_database_path: PATH
 			-- `last_database_path' used.
+		attribute
+			create Result.make_current
+		end
 
 feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 
@@ -194,6 +204,8 @@ feature -- Store Operations
 			end
 		end
 
+feature {NONE} -- Implementation: Store Operations
+
 	next_entity_id (a_entity_name: STRING): INTEGER_64
 			-- `next_entity_id' for `a_entity_name'?
 		local
@@ -214,7 +226,6 @@ feature -- Store Operations
 			l_modify: SQLITE_MODIFY_STATEMENT
 			l_insert: SQLITE_INSERT_STATEMENT
 			l_query: SQLITE_QUERY_STATEMENT
-			i: INTEGER
 		do
 			database.begin_transaction (False)
 			create l_modify.make ("UPDATE Entity SET ent_count = " + a_new_count.out + " WHERE ent_name = '" + a_entity_name + "';", database)
@@ -224,11 +235,20 @@ feature -- Store Operations
 
 feature -- Retrieve (fetch by ...) Operations
 
-	-- fetch_by_instance_id --> object
-	-- fetch_by_primary_key --> object
-	-- fetch_by_candidate_key --> object
-	-- fetch_by_filtered_key --> collection
-	-- fetch_by_adhoc_query --> collection
+--	fetch_by_instance_id (a_id: INTEGER_64)
+--			-- fetch_by_instance_id --> object
+--		local
+--			l_modify: SQLITE_MODIFY_STATEMENT
+--			l_insert: SQLITE_INSERT_STATEMENT
+--			l_query: SQLITE_QUERY_STATEMENT
+--		do
+
+--		end
+
+			-- fetch_by_primary_key --> object
+			-- fetch_by_candidate_key --> object
+			-- fetch_by_filtered_key --> collection
+			-- fetch_by_adhoc_query --> collection
 
 feature {TEST_SET_HELPER} -- Implementation: Entity
 
@@ -317,68 +337,43 @@ feature {TEST_SET_HELPER} -- Implementation: Attribute
 			database.begin_transaction (False)
 
 			if attached {DATE} a_value as al_value then
-				create l_modify.make ("UPDATE Value_date SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_date (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_date", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {DATE_TIME} a_value as al_value then
-				create l_modify.make ("UPDATE Value_date SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_date (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_date", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {CHARACTER} a_value as al_value then
-				create l_modify.make ("UPDATE Value_text SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_text", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {STRING} a_value as al_value then
-				create l_modify.make ("UPDATE Value_text SET val_item = '" + al_value + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_text", al_value, last_attribute_id, a_entity_id)
 			elseif attached {INTEGER} a_value as al_value then
-				create l_modify.make ("UPDATE Value_integer SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_integer (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_integer", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {REAL} a_value as al_value then
-				create l_modify.make ("UPDATE Value_real SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_real", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {DECIMAL} a_value as al_value then
-				create l_modify.make ("UPDATE Value_real SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_real (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
-					l_insert.execute
-				end
-			elseif attached {NUMERIC} a_value as al_value then
-				check numeric_data_type: False end
+				store_with_modify_or_insert ("Value_real", al_value.out, last_attribute_id, a_entity_id)
 			elseif attached {BOOLEAN} a_value as al_value then
-				create l_modify.make ("UPDATE Value_integer SET val_item = '" + al_value.to_integer.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
-				l_modify.execute
-				if l_modify.changes_count = 0 then
-					create l_insert.make ("INSERT OR REPLACE INTO Value_integer (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.to_integer.out + "');", database)
-					l_insert.execute
-				end
+				store_with_modify_or_insert ("Value_integer", al_value.to_integer.out, last_attribute_id, a_entity_id)
+			elseif attached {NUMERIC} a_value as al_value then
+				-- For now: Please choose between: INTEGER, REAL, or DECIMAL in the source object data type.
+				check numeric_data_type: False end
 			else
 				check unknown_data_type: False end
 			end
 
 			database.commit
+		end
+
+	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id, a_entity_id: INTEGER_64)
+			-- `store_with_modify_or_insert' of `a_value' for `a_attribute_id' and `a_entity_id'.
+		local
+			l_insert: SQLITE_INSERT_STATEMENT
+			l_modify: SQLITE_MODIFY_STATEMENT
+		do
+			create l_modify.make ("UPDATE " + a_table + " SET val_item = '" + a_value + "' WHERE  atr_id = " + a_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+			l_modify.execute
+			if l_modify.changes_count = 0 then
+				create l_insert.make ("INSERT OR REPLACE INTO " + a_table + " (atr_id, instance_id, val_item) VALUES (" + a_attribute_id.out + "," + a_entity_id.out + ",'" + a_value + "');", database)
+				l_insert.execute
+			end
 		end
 
 	store_attribute_name (a_name: STRING; a_entity_id: INTEGER_64)
@@ -490,20 +485,42 @@ feature {NONE} -- Implementation: Basic Operations
 feature {EAV_DB_ENABLED} -- Implementation: Constants
 
 	new_instance_id_constant: INTEGER_64 = 0
+			-- `new_instance_id_constant' is how Current recognizes "new" Entity instances.
 
 feature {NONE} -- Implementation: Constants
 
-	ascending_order: STRING = "ASC " -- `ascending_order'
-	autoincrement: STRING = "AUTOINCREMENT " -- `autoincrement'
-	check_for_exists: STRING = "IF NOT EXISTS " -- `check_for_exists'
-	create_table: STRING = "CREATE TABLE " -- `create_table'
-	extension: STRING = "sqlite3" -- `extension'
-	primary_key: STRING = "PRIMARY KEY " -- `primary_key'
+	ascending_order: STRING = "ASC "
+		-- `ascending_order' magic number replacement constant.
+
+	autoincrement: STRING = "AUTOINCREMENT "
+		-- `autoincrement' magic number replacement constant.
+
+	check_for_exists: STRING = "IF NOT EXISTS "
+		-- `check_for_exists' magic number replacement constant.
+
+	create_table: STRING = "CREATE TABLE "
+		-- `create_table' magic number replacement constant.
+
+	extension: STRING = "sqlite3"
+		-- `extension' magic number replacement constant.
+
+	primary_key: STRING = "PRIMARY KEY "
+		-- `primary_key' magic number replacement constant.
+
 	sqlite_blob_kw: STRING = " BLOB "
+		-- `sqlite_blob_kw' magic number replacement constant.
+
 	sqlite_integer_kw: STRING = " INTEGER "
+		-- `sqlite_integer_kw' magic number replacement constant.
+
 	sqlite_numeric_kw: STRING = " NUMERIC "
+		-- `sqlite_numeric_kw' magic number replacement constant.
+
 	sqlite_real_kw: STRING = " REAL "
+		-- `sqlite_real_kw' magic number replacement constant.
+
 	sqlite_text_kw: STRING = " TEXT "
+		-- `sqlite_text_kw' magic number replacement constant.
 
 	date_field,
 	character_field,
@@ -515,6 +532,7 @@ feature {NONE} -- Implementation: Constants
 		end
 
 	numeric_field (a_name: STRING): STRING
+			-- Numeric fields really need direct support as INTEGER, REAL, or DECIMAL.
 		do
 			Result := a_name; Result.append (sqlite_numeric_kw)
 		end

@@ -17,6 +17,7 @@ deferred class
 feature {TEST_SET_BRIDGE} -- Implementation: Storable
 
 	store_in_database (a_object: EAV_DB_ENABLED; a_database: attached like database)
+			-- `store_in_database' `a_object' into `a_database'.
 		do
 			a_database.store (a_object)
 		end
@@ -24,6 +25,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Storable
 feature {EAV_DATABASE} -- Implementation: Storable
 
 	entity_name: STRING
+			-- `entity_name' for or from Metadata storage.
 		deferred
 		end
 
@@ -43,6 +45,8 @@ feature {EAV_DATABASE} -- Implementation: Storable
 		do
 			Result := instance_id = {EAV_DATABASE}.new_instance_id_constant
 		end
+
+feature {NONE} -- Implementation: Database & Ops
 
 	database: detachable EAV_DATABASE
 			-- `database' to which Current belongs.
@@ -69,6 +73,8 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
 			end
 		end
 
+feature {TEST_SET_BRIDGE} -- Implementation: DB Feature Lists
+
 	db_enabled_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- A "hash" of *_dbe (database enabled) fields, recognizable by feature name suffix.
 		once ("object")
@@ -86,6 +92,8 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
 		once ("object")
 			Result := db_features (a_object, db_candidate_key_suffix)
 		end
+
+feature {NONE} -- Implementation: Feature lists
 
 	db_features (a_object: ANY; a_suffix: STRING): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- `db_features' of `a_object' for `a_suffix' in the feature name.
@@ -105,6 +113,8 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
 			no_more_than: reflector.field_count (a_object) >= Result.count
 		end
 
+feature {NONE} -- Implementation: Feature Name Management
+
 	remove_suffixes (a_name: STRING): STRING
 			-- `remove_suffixes' from `a_name'.
 			-- Removes `db_enabled_feature_suffix', `db_primary_key_suffix', and `db_candidate_key_suffix'.
@@ -122,8 +132,9 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
 
 feature {NONE} -- Implementation: INTERNAL
 
-	reflector: INTERNAL once create Result end
+	reflector: INTERNAL
 			-- `reflector' for reflection of Current.
+		once create Result end
 
 	db_enabled_feature_suffix: STRING = "_dbe"
 			-- `db_enabled_feature_suffix' found on feature names.
