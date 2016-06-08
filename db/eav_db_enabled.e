@@ -46,19 +46,19 @@ feature {TEST_SET_BRIDGE} -- Implementation: INTERNAL
 
 	db_enabled_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- A "hash" of *_dbe (database enabled) fields, recognizable by feature name suffix.
-		once
+		once ("object")
 			Result := db_features (a_object, db_enabled_feature_suffix)
 		end
 
 	db_primary_key_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- A "hash" of *_pk (database enabled) fields, recognizable by feature name suffix.
-		once
+		once ("object")
 			Result := db_features (a_object, db_primary_key_suffix)
 		end
 
 	db_candidate_key_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- A "hash" of *_pk (database enabled) fields, recognizable by feature name suffix.
-		once
+		once ("object")
 			Result := db_features (a_object, db_candidate_key_suffix)
 		end
 

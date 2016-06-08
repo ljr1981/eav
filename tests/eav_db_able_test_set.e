@@ -65,6 +65,35 @@ feature -- Storable Tests
 			remove_data
 		end
 
+	two_entities_tests
+			-- `two_entities_tests'
+		local
+			l_system: EAV_SYSTEM
+			l_bugs,
+			l_elmer: MOCK_OBJECT
+		do
+				-- Prep-work ...
+			create l_system.make ("system", test_data_path)
+
+				-- Handle Bugsy first ...
+			create l_bugs
+			l_bugs.set_first_name ("Bugs")
+			l_bugs.set_last_name ("Bunny")
+			l_bugs.set_age (74)
+			l_bugs.store_in_database (l_bugs, l_system.first_database)
+
+				-- Now do Elmer ...
+			create l_elmer
+			l_elmer.set_first_name ("Elmer")
+			l_elmer.set_last_name ("Fudd")
+			l_elmer.set_age (73)
+			l_elmer.store_in_database (l_elmer, l_system.first_database)
+
+				-- Cleanup
+			l_system.close_all
+			remove_data
+		end
+
 end
 
 
