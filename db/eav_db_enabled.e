@@ -8,21 +8,38 @@ deferred class
 
 feature {TEST_SET_BRIDGE} -- Implementation: Storable
 
-	store_in_database (a_object: ANY; a_database: attached like database)
+	store_in_database (a_object: EAV_DB_ENABLED; a_database: attached like database)
 		do
-			a_database.store (entity_name, feature_data (a_object).to_array)
+			a_database.store (a_object)
 		end
 
-feature {NONE} -- Implementation: Storable
+feature {EAV_DATABASE} -- Implementation: Storable
 
 	entity_name: STRING
 		deferred
 		end
 
+	instance_id: INTEGER_64
+			-- `instance_id' of Current {EAV_DB_ENABLED} object.
+
+	set_instance_id (a_instance_id: like instance_id)
+			-- `set_instance_id' with `a_instance_id'
+		do
+			instance_id := a_instance_id
+		ensure
+			set: instance_id ~ a_instance_id
+		end
+
+	is_new: BOOLEAN
+			-- `is_new'?
+		do
+			Result := instance_id = {EAV_DATABASE}.new_instance_id_constant
+		end
+
 	database: detachable EAV_DATABASE
 			-- `database' to which Current belongs.
 
-	store (a_object: ANY)
+	store (a_object: EAV_DB_ENABLED)
 			-- `store' `a_object' into `database'.
 		do
 			check has_database: attached database as al_database then
@@ -30,7 +47,7 @@ feature {NONE} -- Implementation: Storable
 			end
 		end
 
-feature {TEST_SET_BRIDGE} -- Implementation: INTERNAL
+feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
 
 	feature_data (a_object: ANY): ARRAYED_LIST [TUPLE [attr_name: STRING; attr_value: detachable ANY]]
 			-- `feature_data' of `a_object' as a list of `attr_name' and `attr_value'.

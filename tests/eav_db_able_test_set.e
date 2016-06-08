@@ -55,12 +55,17 @@ feature -- Storable Tests
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
 		do
+				-- Prep work ...
+			create l_system.make ("system", test_data_path)
+
+				-- Create Bugsy boy ...
 			create l_mock
 			l_mock.set_first_name ("Bugs")
 			l_mock.set_last_name ("Bunny")
 			l_mock.set_age (74)
-			create l_system.make ("system", test_data_path)
 			l_mock.store_in_database (l_mock, l_system.first_database)
+
+				-- Clean-up and housekeeping ...
 			l_system.close_all
 			remove_data
 		end
@@ -90,6 +95,32 @@ feature -- Storable Tests
 			l_elmer.store_in_database (l_elmer, l_system.first_database)
 
 				-- Cleanup
+			l_system.close_all
+			remove_data
+		end
+
+	changing_object_data_tests
+			-- `changing_object_data_tests'
+		local
+			l_system: EAV_SYSTEM
+			l_mock: MOCK_OBJECT
+		do
+				-- Prep work ...
+			create l_system.make ("system", test_data_path)
+
+				-- Create Bugsy boy ...
+			create l_mock
+			l_mock.set_first_name ("Bugs")
+			l_mock.set_last_name ("Bunny")
+			l_mock.set_age (74)
+			l_mock.store_in_database (l_mock, l_system.first_database)
+
+				-- Give us a change and ensure the same object is changed
+				-- and not a new object created with the changed data.
+			l_mock.set_age (29)
+			l_mock.store_in_database (l_mock, l_system.first_database)
+
+				-- Clean-up and housekeeping ...
 			l_system.close_all
 			remove_data
 		end

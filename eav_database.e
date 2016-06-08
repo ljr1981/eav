@@ -172,21 +172,25 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 feature -- Database Management Operations
 
-	store (a_entity_name: STRING; a_values: ARRAY [TUPLE [attr_name: STRING; attr_value: detachable ANY]])
-			-- `store' `a_values' of `a_entity_name' into `database'.
-		local
-			l_entity_id: INTEGER_64
+	store (a_object: EAV_DB_ENABLED)
+			-- `store' `a_object' into `database'.
 		do
+			-- entity_name, feature_data (a_object).to_array
 				-- Handle Entity first ...
-			store_entity (a_entity_name)
-			l_entity_id := next_entity_id (a_entity_name)
-			update_entity_count (a_entity_name, l_entity_id)
+			store_entity (a_object.entity_name)
+
+				-- New instance or existing?
+			if a_object.instance_id = new_instance_id_constant then
+				a_object.set_instance_id (next_entity_id (a_object.entity_name))
+				update_entity_count (a_object.entity_name, a_object.instance_id)
+			end
+			check not_new_instance: not a_object.is_new end
 
 				-- Then handle Attributes ...
 			across
-				a_values as ic_values
+				a_object.feature_data (a_object) as ic_values
 			loop
-				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, l_entity_id)
+				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object.instance_id)
 			end
 		end
 
@@ -474,6 +478,10 @@ feature {NONE} -- Implementation: Basic Operations
 			no_tail: not Result.has_substring (a_fields [a_fields.count] + ",")
 			closing_semicolon: Result [Result.count] = ';'
 		end
+
+feature {EAV_DB_ENABLED} -- Implementation: Constants
+
+	new_instance_id_constant: INTEGER_64 = 0
 
 feature {NONE} -- Implementation: Constants
 
