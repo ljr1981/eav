@@ -34,22 +34,13 @@ feature {TEST_SET_BRIDGE} -- Implementation: INTERNAL
 
 	feature_data (a_object: ANY): ARRAYED_LIST [TUPLE [attr_name: STRING; attr_value: detachable ANY]]
 			-- `feature_data' of `a_object' as a list of `attr_name' and `attr_value'.
-		local
-			l_value: detachable ANY
-			l_feature: FUNCTION [detachable ANY]
 		do
 			create Result.make (50)
 			across
 				db_enabled_features (a_object) as ic_features
 			loop
-				l_feature := ic_features.item.feature_agent
-				l_feature.call ([Void])
-				l_value := l_feature.last_result
-				check attached {FUNCTION [detachable ANY]} l_value as al_value then
-					al_value.call ([Void])
-					Result.force (ic_features.item.feature_name, al_value.last_result)
-				end
-
+				ic_features.item.feature_agent.call ([Void])
+				Result.force (ic_features.item.feature_name, ic_features.item.feature_agent.last_result)
 			end
 		end
 
@@ -82,9 +73,11 @@ feature {TEST_SET_BRIDGE} -- Implementation: INTERNAL
 					attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name and then
 					al_name.has_substring (a_suffix)
 				then
-					Result.force ([agent db_feature_agent (ic_counter.item, a_object), remove_suffixes (al_name)], al_name)
+					Result.force ([db_feature_agent (ic_counter.item, a_object), remove_suffixes (al_name)], al_name)
 				end
 			end
+		ensure
+			no_more_than: reflector.field_count (a_object) >= Result.count
 		end
 
 	remove_suffixes (a_name: STRING): STRING
@@ -95,6 +88,11 @@ feature {TEST_SET_BRIDGE} -- Implementation: INTERNAL
 			Result.replace_substring_all (db_enabled_feature_suffix, "")
 			Result.replace_substring_all (db_primary_key_suffix, "")
 			Result.replace_substring_all (db_candidate_key_suffix, "")
+		ensure
+			not_has: not Result.has_substring (db_enabled_feature_suffix) and
+						not Result.has_substring (db_primary_key_suffix) and
+						not Result.has_substring (db_candidate_key_suffix)
+			still_has: a_name.has_substring (Result)
 		end
 
 feature {NONE} -- Implementation: INTERNAL

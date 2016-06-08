@@ -2,6 +2,7 @@
 	description: "[
 		Representation of an effected {EAV_DATABASE}.
 		]"
+	design: "See notes clause at the end of this class."
 
 class
 	EAV_DATABASE
@@ -17,17 +18,19 @@ feature {NONE} -- Initialization
 	make (a_location, a_file_name: READABLE_STRING_GENERAL)
 			-- `make' at `a_location' (uri, file-spec, etc) using `a_file_name'.
 			-- For now: This feature presumes a file-based database system.
+		require
+			real_location: (create {DIRECTORY}.make_open_read (a_location)).exists
 		local
-			l_full_name: STRING
+			l_full_path: STRING
 		do
-			l_full_name := (create {EXECUTION_ENVIRONMENT}).current_working_path.name.out
-			l_full_name.append_character ('\')
-			l_full_name.append (a_location.out)
-			l_full_name.append_character ('\')
-			l_full_name.append (a_file_name.out)
-			l_full_name.append_character ('.')
-			l_full_name.append (extension)
-			create last_database_path.make_from_string (l_full_name)
+			l_full_path := (create {EXECUTION_ENVIRONMENT}).current_working_path.name.out
+			l_full_path.append_character ('\')
+			l_full_path.append (a_location.out)
+			l_full_path.append_character ('\')
+			l_full_path.append (a_file_name.out)
+			l_full_path.append_character ('.')
+			l_full_path.append (extension)
+			create last_database_path.make_from_string (l_full_path)
 			create database.make_create_read_write (last_database_path.name)
 		end
 
@@ -38,10 +41,15 @@ feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 
 	build_eav_structure
 			-- `build_eav_structure'.
+			-- Note these tables are constructed if they do not
+			-- yet exist. If they do exist, they are left as-is.
+			-- See {EAV_DOCS} for more information.
 		do
+				-- Build Metadata tables ...
 			build_entity
 			build_attribute
 
+				-- Build Value tables ...
 			build_date_value
 			build_character_value
 			build_varchar_value
@@ -59,6 +67,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 	build_entity
 			-- `build_entity' table (if needed).
+			-- See {EAV_DOCS} for more information.
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 		do
@@ -78,6 +87,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 	build_attribute
 			-- `build_attribute' table (if needed).
+			-- See {EAV_DOCS} for more information.
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 		do
@@ -140,6 +150,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 	build_value (a_table_name: STRING; a_item_field_agent: FUNCTION [TUPLE [STRING], STRING])
 			-- `build_varchar_value' table (if needed).
+			-- Services all higher `build_*' features (above).
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 			l_last_result: STRING
@@ -166,9 +177,12 @@ feature -- Database Management Operations
 		local
 			l_entity_id: INTEGER_64
 		do
+				-- Handle Entity first ...
 			store_entity (a_entity_name)
 			l_entity_id := next_entity_id (a_entity_name)
 			update_entity_count (a_entity_name, l_entity_id)
+
+				-- Then handle Attributes ...
 			across
 				a_values as ic_values
 			loop
@@ -453,16 +467,27 @@ feature {NONE} -- Implementation: Basic Operations
 			end
 			Result.append_character (')')
 			Result.append_character (';')
+		ensure
+			has_parts: across a_parts as ic all Result.has_substring (ic.item) end
+			has_fields: across a_fields as ic all Result.has_substring (ic.item) end
+			all_commas: across 1 |..| (a_fields.count - 1) as ic all Result.has_substring (a_fields [ic.item] + ",") end
+			no_tail: not Result.has_substring (a_fields [a_fields.count] + ",")
+			closing_semicolon: Result [Result.count] = ';'
 		end
 
 feature {NONE} -- Implementation: Constants
 
-	extension: STRING = "sqlite3" -- `extension'
-	create_table: STRING = "CREATE TABLE " -- `create_table'
-	check_for_exists: STRING = "IF NOT EXISTS " -- `check_for_exists'
-	primary_key: STRING = "PRIMARY KEY " -- `primary_key'
 	ascending_order: STRING = "ASC " -- `ascending_order'
 	autoincrement: STRING = "AUTOINCREMENT " -- `autoincrement'
+	check_for_exists: STRING = "IF NOT EXISTS " -- `check_for_exists'
+	create_table: STRING = "CREATE TABLE " -- `create_table'
+	extension: STRING = "sqlite3" -- `extension'
+	primary_key: STRING = "PRIMARY KEY " -- `primary_key'
+	sqlite_blob_kw: STRING = " BLOB "
+	sqlite_integer_kw: STRING = " INTEGER "
+	sqlite_numeric_kw: STRING = " NUMERIC "
+	sqlite_real_kw: STRING = " REAL "
+	sqlite_text_kw: STRING = " TEXT "
 
 	date_field,
 	character_field,
@@ -470,19 +495,19 @@ feature {NONE} -- Implementation: Constants
 	text_field (a_name: STRING): STRING
 			-- Date, character, varchar, and text fields are all TEXT.
 		do
-			Result := a_name; Result.append (" TEXT ")
+			Result := a_name; Result.append (sqlite_text_kw)
 		end
 
 	numeric_field (a_name: STRING): STRING
 		do
-			Result := a_name; Result.append (" NUMERIC ")
+			Result := a_name; Result.append (sqlite_numeric_kw)
 		end
 
 	boolean_field,
 	integer_field (a_name: STRING): STRING
 			-- Boolean and integer fields are both INTEGER.
 		do
-			Result := a_name; Result.append (" INTEGER ")
+			Result := a_name; Result.append (sqlite_integer_kw)
 		end
 
 	float_field,
@@ -490,13 +515,13 @@ feature {NONE} -- Implementation: Constants
 	real_field (a_name: STRING): STRING
 			-- Floats and doubles are reals.
 		do
-			Result := a_name; Result.append (" REAL ")
+			Result := a_name; Result.append (sqlite_real_kw)
 		end
 
 	blob_field (a_name: STRING): STRING
 			-- Blob fields of all sorts.
 		do
-			Result := a_name; Result.append (" BLOB ")
+			Result := a_name; Result.append (sqlite_blob_kw)
 		end
 
 feature {EAV_SYSTEM} -- Implementation: Access
@@ -506,7 +531,13 @@ feature {EAV_SYSTEM} -- Implementation: Access
 
 ;note
 	design_intent: "[
-		Your_text_goes_here
+		The intent of this class is representation of a generic or abstract database.
+		The clients of this class ought to never know precisely what database they are
+		connecting to and utilizing.
+		
+		NOTE: To start with, we will be using SQLite3 exclusively. However, that will
+				soon change to where the DB can be switched underneath by way of a bridge
+				pattern.
 		]"
 
 end

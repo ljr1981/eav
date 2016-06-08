@@ -2,7 +2,9 @@ note
 	description: "[
 		Tests of the {EAV_DB_ENABLED} class.
 	]"
-	testing: "type/manual"
+	testing: "type/manual",
+				"execution/serial",
+				"execution/isolated"
 
 class
 	EAV_DB_ABLE_TEST_SET
@@ -76,7 +78,7 @@ feature {NONE} -- Implementation
 			create l_path.make_from_string ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + "\tests\data\")
 			create l_dir.make_with_path (l_path)
 			l_dir.do_nothing
-			--l_dir.delete_content
+			l_dir.delete_content
 		end
 
 end
