@@ -40,12 +40,29 @@ feature -- Creation Tests
 			l_mock: MOCK_OBJECT
 		do
 			create l_mock.make_with_reasonable_defaults
+
+				-- Ensure *_dbe fields are working for "getters" ...
 			assert_integers_equal ("field_count", 3, l_mock.db_enabled_features (l_mock).count)
 			assert_booleans_equal ("first_name", True, l_mock.db_enabled_features (l_mock).has_key ("first_name_dbe"))
 			assert_booleans_equal ("last_name", True, l_mock.db_enabled_features (l_mock).has_key ("last_name_dbe"))
 			assert_strings_equal ("last_name", "last_name", l_mock.db_enabled_features (l_mock).iteration_item (1).feature_name)
 			assert_booleans_equal ("age_dbe", True, l_mock.db_enabled_features (l_mock).has_key ("age_dbe"))
+
+				-- Ensure *_dbe feilds are working for "setters" ...
+			assert_integers_equal ("setter_count", 3, l_mock.db_enabled_setter_features (l_mock).count)
+			check attached {attached like tuple_anchor} l_mock.db_enabled_setter_features (l_mock).item ("age_dbe") as al_tuple then
+				al_tuple.setter_agent.call ([27])
+				assert_integers_equal ("27", 27, l_mock.age_dbe)
+			end
+			check attached {attached like tuple_anchor} l_mock.db_enabled_setter_features (l_mock).item ("first_name_dbe") as al_tuple then
+				al_tuple.setter_agent.call (["fred"])
+				assert_strings_equal ("fred", "fred", l_mock.first_name_dbe)
+			end
 		end
+
+feature {NONE} -- Test Support
+
+	tuple_anchor: detachable TUPLE [setter_agent: PROCEDURE [detachable ANY]; setter_name: STRING_8]
 
 feature -- Storable Tests
 
