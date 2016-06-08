@@ -14,6 +14,13 @@ note
 deferred class
 	EAV_DB_ENABLED
 
+feature {NONE} -- Initialization
+
+	make_with_reasonable_defaults
+			-- `make_with_reasonable_defaults'.
+		deferred
+		end
+
 feature {TEST_SET_BRIDGE} -- Implementation: Storable
 
 	store_in_database (a_object: EAV_DB_ENABLED; a_database: attached like database)
@@ -44,19 +51,6 @@ feature {EAV_DATABASE} -- Implementation: Storable
 			-- `is_new'?
 		do
 			Result := instance_id = {EAV_DATABASE}.new_instance_id_constant
-		end
-
-feature {NONE} -- Implementation: Database & Ops
-
-	database: detachable EAV_DATABASE
-			-- `database' to which Current belongs.
-
-	store (a_object: EAV_DB_ENABLED)
-			-- `store' `a_object' into `database'.
-		do
-			check has_database: attached database as al_database then
-				store_in_database (a_object, al_database)
-			end
 		end
 
 feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: INTERNAL
@@ -128,6 +122,19 @@ feature {NONE} -- Implementation: Feature Name Management
 						not Result.has_substring (db_primary_key_suffix) and
 						not Result.has_substring (db_candidate_key_suffix)
 			still_has: a_name.has_substring (Result)
+		end
+
+feature {NONE} -- Implementation: Database & Ops
+
+	database: detachable EAV_DATABASE
+			-- `database' to which Current belongs.
+
+	store (a_object: EAV_DB_ENABLED)
+			-- `store' `a_object' into `database'.
+		do
+			check has_database: attached database as al_database then
+				store_in_database (a_object, al_database)
+			end
 		end
 
 feature {NONE} -- Implementation: INTERNAL

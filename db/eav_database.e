@@ -224,8 +224,6 @@ feature {NONE} -- Implementation: Store Operations
 			-- `update_entity_count' for `a_entity_name' to `a_new_count'.
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
-			l_insert: SQLITE_INSERT_STATEMENT
-			l_query: SQLITE_QUERY_STATEMENT
 		do
 			database.begin_transaction (False)
 			create l_modify.make ("UPDATE Entity SET ent_count = " + a_new_count.out + " WHERE ent_name = '" + a_entity_name + "';", database)
@@ -235,22 +233,22 @@ feature {NONE} -- Implementation: Store Operations
 
 feature -- Retrieve (fetch by ...) Operations
 
---	fetch_by_instance_id (a_id: INTEGER_64)
---			-- fetch_by_instance_id --> object
---		local
---			l_modify: SQLITE_MODIFY_STATEMENT
---			l_insert: SQLITE_INSERT_STATEMENT
---			l_query: SQLITE_QUERY_STATEMENT
---		do
-
---		end
+	fetch_by_instance_id (a_id: INTEGER_64)
+			-- fetch_by_instance_id --> object
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_sql: STRING
+		do
+			create l_sql.make_empty
+			create l_query.make (l_sql, database)
+		end
 
 			-- fetch_by_primary_key --> object
 			-- fetch_by_candidate_key --> object
 			-- fetch_by_filtered_key --> collection
 			-- fetch_by_adhoc_query --> collection
 
-feature {TEST_SET_HELPER} -- Implementation: Entity
+feature {TEST_SET_BRIDGE} -- Implementation: Entity
 
 	store_entity (a_entity_name: STRING)
 			-- `store_entity' `a_entity_name'.
@@ -324,14 +322,10 @@ feature {TEST_SET_HELPER} -- Implementation: Entity
 		end
 
 
-feature {TEST_SET_HELPER} -- Implementation: Attribute
+feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 
 	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64)
 			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
-		local
-			l_insert: SQLITE_INSERT_STATEMENT
-			l_modify: SQLITE_MODIFY_STATEMENT
-			l_value: detachable ANY
 		do
 			store_attribute_name (a_attribute_name, a_entity_id)
 			database.begin_transaction (False)

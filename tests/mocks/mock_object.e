@@ -9,15 +9,25 @@ class
 inherit
 	EAV_DB_ENABLED
 
+create
+	make_with_reasonable_defaults
+
+feature {NONE} -- Initialization
+
+	make_with_reasonable_defaults
+			-- <Precursor>
+		do
+			create first_name_dbe.make_empty
+			create last_name_dbe.make_empty
+		end
+
 feature {TEST_SET_BRIDGE} -- Access
 
 	first_name_dbe: STRING
 			-- `first_name_dbe', which is database enabled (dbe).
-		attribute create Result.make_empty end
 
 	last_name_dbe: STRING
 			-- `last_name_dbe', which is database enabled (dbe).
-		attribute create Result.make_empty end
 
 	age_dbe: INTEGER
 			-- `age_dbe', which is database enabled (dbe).
@@ -32,24 +42,24 @@ feature {TEST_SET_BRIDGE} -- Keys
 
 feature -- Setters
 
-	set_first_name (a_first_name: like first_name_dbe)
-			-- `set_first_name' with `a_first_name'
+	set_first_name_dbe (a_first_name: like first_name_dbe)
+			-- `set_first_name_dbe' with `a_first_name'
 		do
 			first_name_dbe := a_first_name
 		ensure
 			set: first_name_dbe ~ a_first_name
 		end
 
-	set_last_name (a_last_name: like last_name_dbe)
-			-- `set_last_name' with `a_last_name'
+	set_last_name_dbe (a_last_name: like last_name_dbe)
+			-- `set_last_name_dbe' with `a_last_name'
 		do
 			last_name_dbe := a_last_name
 		ensure
 			set: last_name_dbe ~ a_last_name
 		end
 
-	set_age (a_age: like age_dbe)
-			-- `set_age' with `a_age'
+	set_age_dbe (a_age: like age_dbe)
+			-- `set_age_dbe' with `a_age'
 		do
 			age_dbe := a_age
 		ensure

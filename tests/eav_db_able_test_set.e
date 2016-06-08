@@ -39,7 +39,7 @@ feature -- Creation Tests
 		local
 			l_mock: MOCK_OBJECT
 		do
-			create l_mock
+			create l_mock.make_with_reasonable_defaults
 			assert_integers_equal ("field_count", 3, l_mock.db_enabled_features (l_mock).count)
 			assert_booleans_equal ("first_name", True, l_mock.db_enabled_features (l_mock).has_key ("first_name_dbe"))
 			assert_booleans_equal ("last_name", True, l_mock.db_enabled_features (l_mock).has_key ("last_name_dbe"))
@@ -59,10 +59,10 @@ feature -- Storable Tests
 			create l_system.make ("system", test_data_path)
 
 				-- Create Bugsy boy ...
-			create l_mock
-			l_mock.set_first_name ("Bugs")
-			l_mock.set_last_name ("Bunny")
-			l_mock.set_age (74)
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Bugs")
+			l_mock.set_last_name_dbe ("Bunny")
+			l_mock.set_age_dbe (74)
 			l_mock.store_in_database (l_mock, l_system.first_database)
 
 				-- Clean-up and housekeeping ...
@@ -81,17 +81,17 @@ feature -- Storable Tests
 			create l_system.make ("system", test_data_path)
 
 				-- Handle Bugsy first ...
-			create l_bugs
-			l_bugs.set_first_name ("Bugs")
-			l_bugs.set_last_name ("Bunny")
-			l_bugs.set_age (74)
+			create l_bugs.make_with_reasonable_defaults
+			l_bugs.set_first_name_dbe ("Bugs")
+			l_bugs.set_last_name_dbe ("Bunny")
+			l_bugs.set_age_dbe (74)
 			l_bugs.store_in_database (l_bugs, l_system.first_database)
 
 				-- Now do Elmer ...
-			create l_elmer
-			l_elmer.set_first_name ("Elmer")
-			l_elmer.set_last_name ("Fudd")
-			l_elmer.set_age (73)
+			create l_elmer.make_with_reasonable_defaults
+			l_elmer.set_first_name_dbe ("Elmer")
+			l_elmer.set_last_name_dbe ("Fudd")
+			l_elmer.set_age_dbe (73)
 			l_elmer.store_in_database (l_elmer, l_system.first_database)
 
 				-- Cleanup
@@ -109,15 +109,15 @@ feature -- Storable Tests
 			create l_system.make ("system", test_data_path)
 
 				-- Create Bugsy boy ...
-			create l_mock
-			l_mock.set_first_name ("Bugs")
-			l_mock.set_last_name ("Bunny")
-			l_mock.set_age (74)
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Bugs")
+			l_mock.set_last_name_dbe ("Bunny")
+			l_mock.set_age_dbe (74)
 			l_mock.store_in_database (l_mock, l_system.first_database)
 
 				-- Give us a change and ensure the same object is changed
 				-- and not a new object created with the changed data.
-			l_mock.set_age (29)
+			l_mock.set_age_dbe (29)
 			l_mock.store_in_database (l_mock, l_system.first_database)
 
 				-- Clean-up and housekeeping ...
