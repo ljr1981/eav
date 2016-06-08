@@ -11,7 +11,7 @@ inherit
 	EQA_TEST_SET
 		rename
 			assert as assert_old
-		redefine
+		undefine
 			on_clean
 		end
 
@@ -21,6 +21,11 @@ inherit
 		end
 
 	TEST_SET_BRIDGE
+		undefine
+			default_create
+		end
+
+	EAV_TEST_DATA_HELPER
 		undefine
 			default_create
 		end
@@ -47,33 +52,12 @@ feature -- Creation Tests
 		local
 			l_system: EAV_SYSTEM
 		do
-			create l_system.make ("system", "tests\data")
+			create l_system.make ("system", test_data_path)
 			l_system.close_all
 			remove_data
-			create l_system.make_with_list ("system", "tests\data", <<"eeny", "meeny", "miny", "mo">>)
+			create l_system.make_with_list ("system", test_data_path, <<"eeny", "meeny", "miny", "mo">>)
 			l_system.close_all
 			remove_data
-		end
-
-feature {NONE} -- Implementation
-
-	on_clean
-			-- <Precursor>
-		do
-			Precursor
-			remove_data
-		end
-
-	remove_data
-			-- `remove_data' from directory path.
-		local
-			l_path: PATH
-			l_dir: DIRECTORY
-		do
-			create l_path.make_from_string ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + "\tests\data\")
-			create l_dir.make_with_path (l_path)
-			l_dir.do_nothing
-			l_dir.delete_content
 		end
 
 end

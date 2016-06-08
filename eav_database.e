@@ -19,7 +19,7 @@ feature {NONE} -- Initialization
 			-- `make' at `a_location' (uri, file-spec, etc) using `a_file_name'.
 			-- For now: This feature presumes a file-based database system.
 		require
-			real_location: (create {DIRECTORY}.make_open_read (a_location)).exists
+			real_location: (create {DIRECTORY}.make_open_read ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + a_location)).exists
 		local
 			l_full_path: STRING
 		do

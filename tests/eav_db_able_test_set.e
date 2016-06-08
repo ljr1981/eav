@@ -13,7 +13,7 @@ inherit
 	EQA_TEST_SET
 		rename
 			assert as assert_old
-		redefine
+		undefine
 			on_clean
 		end
 
@@ -23,6 +23,11 @@ inherit
 		end
 
 	TEST_SET_BRIDGE
+		undefine
+			default_create
+		end
+
+	EAV_TEST_DATA_HELPER
 		undefine
 			default_create
 		end
@@ -54,31 +59,10 @@ feature -- Storable Tests
 			l_mock.set_first_name ("Bugs")
 			l_mock.set_last_name ("Bunny")
 			l_mock.set_age (74)
-			create l_system.make ("system", "tests\data")
+			create l_system.make ("system", test_data_path)
 			l_mock.store_in_database (l_mock, l_system.first_database)
 			l_system.close_all
 			remove_data
-		end
-
-feature {NONE} -- Implementation
-
-	on_clean
-			-- <Precursor>
-		do
-			Precursor
-			remove_data
-		end
-
-	remove_data
-			-- `remove_data' from directory path.
-		local
-			l_path: PATH
-			l_dir: DIRECTORY
-		do
-			create l_path.make_from_string ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + "\tests\data\")
-			create l_dir.make_with_path (l_path)
-			l_dir.do_nothing
-			l_dir.delete_content
 		end
 
 end
