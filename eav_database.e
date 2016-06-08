@@ -170,7 +170,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 			l_modify.execute
 		end
 
-feature -- Database Management Operations
+feature -- Store Operations
 
 	store (a_object: EAV_DB_ENABLED)
 			-- `store' `a_object' into `database'.
@@ -221,6 +221,14 @@ feature -- Database Management Operations
 			l_modify.execute
 			database.commit
 		end
+
+feature -- Retrieve (fetch by ...) Operations
+
+	-- fetch_by_instance_id --> object
+	-- fetch_by_primary_key --> object
+	-- fetch_by_candidate_key --> object
+	-- fetch_by_filtered_key --> collection
+	-- fetch_by_adhoc_query --> collection
 
 feature {TEST_SET_HELPER} -- Implementation: Entity
 

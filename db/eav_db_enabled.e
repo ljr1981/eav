@@ -2,6 +2,14 @@ note
 	description: "[
 		Abstraction notion of a {EAV_DB_ENABLED}.
 		]"
+	todo: "[
+		(1) When fetching data back and deserializing it from the DB -> Object,
+			what is needed and wanted is:
+			
+			(a) The setters must already be in place--that is--each *_dbe must have
+				a corresponding setter, unless the *_dbe is a computed feature.
+			(b) The setters must be in an agent hash just like the getter features.
+		]"
 
 deferred class
 	EAV_DB_ENABLED
