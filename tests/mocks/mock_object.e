@@ -11,43 +11,48 @@ inherit
 
 feature {TEST_SET_BRIDGE} -- Access
 
-	first_name_dbe,
-	first_name: STRING
+	first_name_dbe: STRING
 			-- `first_name', which is database enabled.
 		attribute create Result.make_empty end
 
-	last_name_dbe,
-	last_name: STRING
+	last_name_dbe: STRING
 			-- `last_name', which is database enabled.
 		attribute create Result.make_empty end
 
-	age_dbe,
-	age: INTEGER
+	age_dbe: INTEGER
+
+feature {TEST_SET_BRIDGE} -- Keys
+
+	first_last_dbe_pk: STRING
+			-- `first_last_pk'
+		do
+			Result := first_name_dbe + last_name_dbe
+		end
 
 feature -- Setters
 
-	set_first_name (a_first_name: like first_name)
+	set_first_name (a_first_name: like first_name_dbe)
 			-- `set_first_name' with `a_first_name'
 		do
-			first_name := a_first_name
+			first_name_dbe := a_first_name
 		ensure
-			set: first_name ~ a_first_name
+			set: first_name_dbe ~ a_first_name
 		end
 
-	set_last_name (a_last_name: like last_name)
+	set_last_name (a_last_name: like last_name_dbe)
 			-- `set_last_name' with `a_last_name'
 		do
-			last_name := a_last_name
+			last_name_dbe := a_last_name
 		ensure
-			set: last_name ~ a_last_name
+			set: last_name_dbe ~ a_last_name
 		end
 
-	set_age (a_age: like age)
+	set_age (a_age: like age_dbe)
 			-- `set_age' with `a_age'
 		do
-			age := a_age
+			age_dbe := a_age
 		ensure
-			set: age ~ a_age
+			set: age_dbe ~ a_age
 		end
 
 feature {TEST_SET_BRIDGE, EAV_DB_ENABLED} -- Implementation

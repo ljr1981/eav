@@ -68,6 +68,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 													integer_field ("sys_id"),
 													text_field ("ent_uuid"),
 													text_field ("ent_name"),
+													integer_field ("ent_count"),
 													boolean_field ("is_deleted"),
 													date_field ("modified_date"),
 													integer_field ("modifier_id")
@@ -162,29 +163,48 @@ feature -- Database Management Operations
 
 	store (a_entity_name: STRING; a_values: ARRAY [TUPLE [attr_name: STRING; attr_value: detachable ANY]])
 			-- `store' `a_values' of `a_entity_name' into `database'.
-		note
-			design: "[
-				(1) Check for the entity name, if not in Entity, then create it, store the PK
-				(2) For each item in `a_values' (†) ...
-					(2a) Check for the attribute name in Attribute, create it needed, store the PK
-					(2b) Check for existing value and update if found.
-					(2c) Check for existing value and insert if not found.
-				
-				------------------------
-				(†) Check to see if a value is in the Value_* table, but not in the object values
-					list. If we find one, then presume the field to have been removed and mark for
-					deletion in the table.
-				]"
+		local
+			l_entity_id: INTEGER_64
 		do
 			store_entity (a_entity_name)
+			l_entity_id := next_entity_id (a_entity_name)
+			update_entity_count (a_entity_name, l_entity_id)
 			across
 				a_values as ic_values
 			loop
-				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value)
+				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, l_entity_id)
 			end
 		end
 
-feature {TEST_SET_HELPER} -- Implementation: DB Management Ops
+	next_entity_id (a_entity_name: STRING): INTEGER_64
+			-- `next_entity_id' for `a_entity_name'?
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			create l_query.make ("SELECT ent_count FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
+			l_result := l_query.execute_new
+			l_result.start
+			if not l_result.after then
+				Result := l_result.item.integer_64_value (1) + 1
+			end
+		end
+
+	update_entity_count (a_entity_name: STRING; a_new_count: INTEGER_64)
+			-- `update_entity_count' for `a_entity_name' to `a_new_count'.
+		local
+			l_modify: SQLITE_MODIFY_STATEMENT
+			l_insert: SQLITE_INSERT_STATEMENT
+			l_query: SQLITE_QUERY_STATEMENT
+			i: INTEGER
+		do
+			database.begin_transaction (False)
+			create l_modify.make ("UPDATE Entity SET ent_count = " + a_new_count.out + " WHERE ent_name = '" + a_entity_name + "';", database)
+			l_modify.execute
+			database.commit
+		end
+
+feature {TEST_SET_HELPER} -- Implementation: Entity
 
 	store_entity (a_entity_name: STRING)
 			-- `store_entity' `a_entity_name'.
@@ -207,16 +227,15 @@ feature {TEST_SET_HELPER} -- Implementation: DB Management Ops
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
 		do
-			create l_insert.make ("INSERT INTO Entity (sys_id, ent_uuid, ent_name, is_deleted, modified_date, modifier_id) VALUES (:SYS_ID, :ENT_UUID, :ENT_NAME,:IS_DEL, :MOD_DATE, :MOD_ID);", database)
+			create l_insert.make ("INSERT INTO Entity (ent_uuid, ent_name, ent_count, is_deleted, modified_date) VALUES (:ENT_UUID, :ENT_NAME, :ENT_CNT, :IS_DEL, :MOD_DATE);", database)
 			check l_insert_is_compiled: l_insert.is_compiled end
 			database.begin_transaction (False)
 			l_insert.execute_with_arguments ([
-				create {SQLITE_INTEGER_ARG}.make (":SYS_ID", 1),
 				create {SQLITE_STRING_ARG}.make (":ENT_UUID", uuid.out),
 				create {SQLITE_STRING_ARG}.make (":ENT_NAME", a_entity_name),
+				create {SQLITE_INTEGER_ARG}.make (":ENT_CNT", 0),
 				create {SQLITE_INTEGER_ARG}.make (":IS_DEL", 0),
-				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
-				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
+				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out)
 				])
 			database.commit
 		end
@@ -232,7 +251,8 @@ feature {TEST_SET_HELPER} -- Implementation: DB Management Ops
 				create l_query.make ("SELECT ent_name FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
 				l_result := l_query.execute_new
 				l_result.start
-				Result := l_result.item.string_value (1).same_string (a_entity_name)
+				Result := not l_result.after and then
+							l_result.item.string_value (1).same_string (a_entity_name)
 			end
 		end
 
@@ -257,10 +277,154 @@ feature {TEST_SET_HELPER} -- Implementation: DB Management Ops
 			create Result.make (50)
 		end
 
-	store_attribute (a_attribute_name: STRING; a_value: detachable ANY)
-			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
-		do
 
+feature {TEST_SET_HELPER} -- Implementation: Attribute
+
+	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64)
+			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
+		local
+			l_insert: SQLITE_INSERT_STATEMENT
+			l_modify: SQLITE_MODIFY_STATEMENT
+			l_value: detachable ANY
+		do
+			store_attribute_name (a_attribute_name, a_entity_id)
+			database.begin_transaction (False)
+
+			if attached {DATE} a_value as al_value then
+				create l_modify.make ("UPDATE Value_date SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_date (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {DATE_TIME} a_value as al_value then
+				create l_modify.make ("UPDATE Value_date SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_date (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {CHARACTER} a_value as al_value then
+				create l_modify.make ("UPDATE Value_text SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {STRING} a_value as al_value then
+				create l_modify.make ("UPDATE Value_text SET val_item = '" + al_value + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value + "');", database)
+					l_insert.execute
+				end
+			elseif attached {INTEGER} a_value as al_value then
+				create l_modify.make ("UPDATE Value_integer SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_integer (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {REAL} a_value as al_value then
+				create l_modify.make ("UPDATE Value_real SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_text (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {DECIMAL} a_value as al_value then
+				create l_modify.make ("UPDATE Value_real SET val_item = '" + al_value.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_real (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.out + "');", database)
+					l_insert.execute
+				end
+			elseif attached {NUMERIC} a_value as al_value then
+				check numeric_data_type: False end
+			elseif attached {BOOLEAN} a_value as al_value then
+				create l_modify.make ("UPDATE Value_integer SET val_item = '" + al_value.to_integer.out + "' WHERE  atr_id = " + last_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+				l_modify.execute
+				if l_modify.changes_count = 0 then
+					create l_insert.make ("INSERT OR REPLACE INTO Value_integer (atr_id, instance_id, val_item) VALUES (" + last_attribute_id.out + "," + a_entity_id.out + ",'" + al_value.to_integer.out + "');", database)
+					l_insert.execute
+				end
+			else
+				check unknown_data_type: False end
+			end
+
+			database.commit
+		end
+
+	store_attribute_name (a_name: STRING; a_entity_id: INTEGER_64)
+			-- `store_entity' `a_name'.
+		do
+			if has_attribute (a_name) then
+				do_nothing -- soon: just get the atr_id
+			else
+				store_new_attribute (a_name, a_entity_id)
+				recently_found_attributes.force (a_name)
+			end
+			last_attribute_id := attribute_id (a_name)
+		ensure
+			has_attribute: has_attribute (a_name)
+		end
+
+	store_new_attribute (a_name: STRING; a_entity_id: INTEGER_64)
+			-- `store_new_attribute' as `a_name'.
+		require
+			not_has: not has_attribute (a_name)
+		local
+			l_insert: SQLITE_INSERT_STATEMENT
+		do
+			create l_insert.make ("INSERT INTO Attribute (ent_id, atr_uuid, atr_name, is_deleted, modified_date, modifier_id) VALUES (:ENT_ID, :ATR_UUID, :ATR_NAME,:IS_DEL, :MOD_DATE, :MOD_ID);", database)
+			check l_insert_is_compiled: l_insert.is_compiled end
+			database.begin_transaction (False)
+			l_insert.execute_with_arguments ([
+				create {SQLITE_INTEGER_ARG}.make (":ENT_ID", a_entity_id),
+				create {SQLITE_STRING_ARG}.make (":ATR_UUID", uuid.out),
+				create {SQLITE_STRING_ARG}.make (":ATR_NAME", a_name),
+				create {SQLITE_INTEGER_ARG}.make (":IS_DEL", 0),
+				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
+				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
+				])
+			database.commit
+		end
+
+	has_attribute (a_name: STRING): BOOLEAN
+			-- `has_attribute' `a_name'?
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			Result := recently_found_attributes.has (a_name)
+			if not Result then
+				create l_query.make ("SELECT atr_name FROM attribute WHERE atr_name = '" + a_name + "';", database)
+				l_result := l_query.execute_new
+				l_result.start
+				Result := not l_result.after and then
+							l_result.item.string_value (1).same_string (a_name)
+			end
+		end
+
+	attribute_id (a_name: STRING): INTEGER_64
+			-- `attribute_id' of `a_name'.
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			create l_query.make ("SELECT atr_id FROM attribute WHERE atr_name = '" + a_name + "';", database)
+			l_result := l_query.execute_new
+			l_result.start
+			Result := l_result.item.integer_64_value (1)
+		end
+
+	last_attribute_id: INTEGER_64
+			-- `last_attribute_id' of last accessed `attribute_id'.
+
+	recently_found_attributes: ARRAYED_LIST [STRING]
+			-- `recently_found_attributes'.
+		attribute
+			create Result.make (50)
 		end
 
 feature {NONE} -- Implementation: Basic Operations

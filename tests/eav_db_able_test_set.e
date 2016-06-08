@@ -34,9 +34,9 @@ feature -- Creation Tests
 		do
 			create l_mock
 			assert_integers_equal ("field_count", 3, l_mock.db_enabled_features (l_mock).count)
-			assert_booleans_equal ("first_name_dbe", True, l_mock.db_enabled_features (l_mock).has_key ("first_name_dbe"))
-			assert_booleans_equal ("last_name_dbe", True, l_mock.db_enabled_features (l_mock).has_key ("last_name_dbe"))
-			assert_strings_equal ("last_name_dbe", "last_name_dbe", l_mock.db_enabled_features (l_mock).iteration_item (1).feature_name)
+			assert_booleans_equal ("first_name", True, l_mock.db_enabled_features (l_mock).has_key ("first_name_dbe"))
+			assert_booleans_equal ("last_name", True, l_mock.db_enabled_features (l_mock).has_key ("last_name_dbe"))
+			assert_strings_equal ("last_name", "last_name", l_mock.db_enabled_features (l_mock).iteration_item (1).feature_name)
 			assert_booleans_equal ("age_dbe", True, l_mock.db_enabled_features (l_mock).has_key ("age_dbe"))
 		end
 
