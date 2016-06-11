@@ -66,9 +66,4 @@ feature -- Setters
 			set: age_dbe ~ a_age
 		end
 
-feature {TEST_SET_BRIDGE, EAV_DB_ENABLED} -- Implementation
-
-	entity_name: STRING = "mock_object"
-			-- <Precursor>
-
 end

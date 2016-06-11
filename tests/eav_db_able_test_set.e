@@ -34,7 +34,7 @@ inherit
 
 feature -- Creation Tests
 
-	db_able_creation_tests
+	creation_and_setter_tests
 			-- `db_able_creation_tests'
 		local
 			l_mock: MOCK_OBJECT
@@ -42,22 +42,43 @@ feature -- Creation Tests
 			create l_mock.make_with_reasonable_defaults
 
 				-- Ensure *_dbe fields are working for "getters" ...
-			assert_integers_equal ("field_count", 3, l_mock.db_enabled_features (l_mock).count)
-			assert_booleans_equal ("first_name", True, l_mock.db_enabled_features (l_mock).has_key ("first_name_dbe"))
-			assert_booleans_equal ("last_name", True, l_mock.db_enabled_features (l_mock).has_key ("last_name_dbe"))
-			assert_strings_equal ("last_name", "last_name", l_mock.db_enabled_features (l_mock).iteration_item (1).feature_name)
-			assert_booleans_equal ("age_dbe", True, l_mock.db_enabled_features (l_mock).has_key ("age_dbe"))
+			assert_integers_equal ("field_count", 3, l_mock.dbe_enabled_features (l_mock).count)
+			assert_booleans_equal ("first_name", True, l_mock.dbe_enabled_features (l_mock).has_key ("first_name_dbe"))
+			assert_booleans_equal ("last_name", True, l_mock.dbe_enabled_features (l_mock).has_key ("last_name_dbe"))
+			assert_strings_equal ("last_name", "last_name", l_mock.dbe_enabled_features (l_mock).iteration_item (1).feature_name)
+			assert_booleans_equal ("age_dbe", True, l_mock.dbe_enabled_features (l_mock).has_key ("age_dbe"))
 
 				-- Ensure *_dbe feilds are working for "setters" ...
-			assert_integers_equal ("setter_count", 3, l_mock.db_enabled_setter_features (l_mock).count)
-			check attached {attached like tuple_anchor} l_mock.db_enabled_setter_features (l_mock).item ("age_dbe") as al_tuple then
+			assert_integers_equal ("setter_count", 3, l_mock.dbe_enabled_setter_features (l_mock).count)
+
+		end
+
+	setters_tests
+			-- `setters_tests'.
+		local
+			l_system: EAV_SYSTEM
+			l_mock: MOCK_OBJECT
+		do
+			create l_system.make ("system", test_data_path)
+			create l_mock.make_with_reasonable_defaults
+
+			check attached {attached like tuple_anchor} l_mock.dbe_enabled_setter_features (l_mock).item ("age_dbe") as al_tuple then
 				al_tuple.setter_agent.call ([27])
 				assert_integers_equal ("27", 27, l_mock.age_dbe)
 			end
-			check attached {attached like tuple_anchor} l_mock.db_enabled_setter_features (l_mock).item ("first_name_dbe") as al_tuple then
+			l_mock.set_field (l_mock, "age", 30)
+			assert_integers_equal ("30", 30, l_mock.age_dbe)
+
+			check attached {attached like tuple_anchor} l_mock.dbe_enabled_setter_features (l_mock).item ("first_name_dbe") as al_tuple then
 				al_tuple.setter_agent.call (["fred"])
 				assert_strings_equal ("fred", "fred", l_mock.first_name_dbe)
 			end
+			l_mock.set_field (l_mock, "first_name", "barney")
+			assert_strings_equal ("barney", "barney", l_mock.first_name_dbe)
+
+				-- Clean-up and housekeeping ...
+			l_system.close_all
+			remove_data
 		end
 
 feature {NONE} -- Test Support

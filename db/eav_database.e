@@ -187,11 +187,11 @@ feature -- Store Operations
 		do
 			-- entity_name, feature_data (a_object).to_array
 				-- Handle Entity first ...
-			store_entity (a_object.entity_name)
+			store_entity (a_object.computed_entity_name)
 
 				-- New instance or existing?
 			if a_object.instance_id = new_instance_id_constant then
-				a_object.set_instance_id (next_entity_id (a_object.entity_name))
+				a_object.set_instance_id (next_entity_id (a_object.computed_entity_name))
 				update_entity_count (a_object.entity_name, a_object.instance_id)
 			end
 			check not_new_instance: not a_object.is_new end

@@ -66,9 +66,8 @@ feature -- Creation Tests
 			l_system.close_all
 			remove_data
 
-			create l_system.make_empty_with_system_database
-			l_system.close_all
-			remove_data
+--			create l_system.make_empty_with_system_database
+--			l_system.close_all
 		end
 
 end
