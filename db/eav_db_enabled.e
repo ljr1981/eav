@@ -41,7 +41,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Storable
 			a_database.store (a_object)
 		end
 
-feature {EAV_DATABASE} -- Implementation: Storable
+feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 
 	computed_entity_name: STRING
 			-- `computed_entity_name' from either `entity_name' (if not empty) or
@@ -130,7 +130,7 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: DB Feature Lists
 			end
 		end
 
-feature {TEST_SET_BRIDGE} -- Implementation: DB Feature Lists
+feature {TEST_SET_BRIDGE, EAV_DATA_MANAGER} -- Implementation: DB Feature Lists
 
 	dbe_enabled_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
 			-- A "hash" of *_dbe (database enabled) fields, recognizable by feature name suffix.

@@ -40,11 +40,32 @@ feature -- Basic Operations
 	fetch_by_id (a_object: DBE; a_id: INTEGER_64)
 			-- `fetch_by_id' of `a_id' into `a_object'.
 		require
-			is_new_default: a_object.is_new and a_object.is_defaulted
+			is_new_default: a_object.is_new and not a_object.is_defaulted
 		do
-
+				-- Walk each `a_object' attribute and fetch the data for `a_id'.
+			across
+				a_object.dbe_enabled_setter_features (a_object) as ic_attributes
+			loop
+				database.fetch_by_instance_id (entity_id (a_object), ic_attributes.item, a_id)
+			end
 		end
 
+	entity_id (a_object: DBE): INTEGER_64
+			-- ??
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_sql: STRING
+			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			l_sql := "SELECT ent_id FROM Entity WHERE ent_name = '" + a_object.computed_entity_name + "';"
+			create l_query.make (l_sql, database.database)
+			l_cursor := l_query.execute_new
+			l_cursor.start
+			check has_result: not l_cursor.after end
+			check attached {INTEGER_64} l_cursor.item.value (ent_id_column_number) as al_result then Result := al_result end
+		end
+
+	ent_id_column_number: NATURAL_32 = 1
 
 feature -- Access
 
@@ -75,7 +96,7 @@ feature {NONE} -- Implementation: Type Anchors
 		Features that manage DBE things. The "management" duties include
 		"haz" attributes about or operations that do:
 		
-		(1) Do fetch_by_id, ... by_*
+		(1) Do fetch_by_id, ... by_* (* = pk, ck, filter, ad-hoc)
 		(2) Do save_item (a_item: DBE), save_items (a_items: ARRAY [DBE])
 		(3) "Haz" phoneme
 		]"
