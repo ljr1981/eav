@@ -28,7 +28,7 @@
 	</target>
 	<target name="test" extends="eav">
 		<description>eav Tests</description>
-		<root class="ANY" feature="default_create"/>
+		<root class="STRESS_TEST_APPLICATION" feature="make"/>
 		<file_rule>
 			<exclude>/.git$</exclude>
 			<exclude>/.svn$</exclude>
@@ -38,7 +38,7 @@
 		</file_rule>
 		<option profile="false">
 		</option>
-		<setting name="console_application" value="false"/>
+		<setting name="console_application" value="true"/>
 		<library name="testing" location="$ISE_LIBRARY\library\testing\testing-safe.ecf"/>
 		<cluster name="tests" location=".\tests\" recursive="true"/>
 	</target>

@@ -33,7 +33,7 @@ feature -- Implementation: Queries
 			-- `is_defaulted'?
 			-- True when awaiting: A) Data load from DB or B) Cleansed for caching.
 
-feature {TEST_SET_BRIDGE} -- Implementation: Storable
+feature -- Storage
 
 	store_in_database (a_object: EAV_DB_ENABLED; a_database: attached like database)
 			-- `store_in_database' `a_object' into `a_database'.
