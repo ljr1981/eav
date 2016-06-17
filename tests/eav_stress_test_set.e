@@ -68,7 +68,7 @@ feature -- Test routines
 			create l_end.make_now
 			print ("start: " + l_start.fine_second.out + "%N")
 			print ("end:   " + l_end.fine_second.out + "%N")
-			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 0.9) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 1.0) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
 
 				-- 10x test of 3x dbe features ...
 			l_mocks := fresh_mocks (712)
@@ -81,7 +81,10 @@ feature -- Test routines
 			create l_end.make_now
 			print ("start: " + l_start.fine_second.out + "%N")
 			print ("end:   " + l_end.fine_second.out + "%N")
-			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 60) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 90) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+
+			l_system.close_all
+			remove_data
 		end
 
 feature {NONE} -- Test Support - `write_test'
@@ -89,7 +92,6 @@ feature {NONE} -- Test Support - `write_test'
 	fresh_mocks (a_count: INTEGER): ARRAYED_LIST [MOCK_OBJECT]
 			-- `fresh_mocks' for the slaughter.
 		local
-			l_randomizer: RANDOMIZER
 			l_mock: MOCK_OBJECT
 		do
 			create Result.make (a_count)
