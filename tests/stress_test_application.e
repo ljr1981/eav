@@ -10,6 +10,11 @@ class
 inherit
 	RANDOMIZER
 
+	EAV_TEST_DATA_HELPER
+		undefine
+			default_create
+		end
+
 create
 	make
 
@@ -27,7 +32,7 @@ feature {NONE} -- Initialization
 			l_file: PLAIN_TEXT_FILE
 		do
 				-- Prep work ...
-			create l_system.make ("system", "\tests\data\")
+			create l_system.make ("system", test_data_path)
 			create l_file.make_create_read_write ("stress_test_results.txt")
 
 				-- 10x test of 3x dbe features ...
@@ -60,6 +65,7 @@ feature {NONE} -- Initialization
 
 			l_file.close
 			l_system.close_all
+			remove_data
 		end
 
 feature {NONE} -- Implementation
