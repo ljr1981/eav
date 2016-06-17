@@ -64,7 +64,7 @@ feature -- Queries
 			Result := databases.item_for_iteration.db
 		end
 
-feature {TEST_SET_BRIDGE} -- Basic Operations
+feature -- Basic Operations
 
 	build_eav (a_database: EAV_DATABASE)
 			-- `build_eav' into `a_database', if needed.

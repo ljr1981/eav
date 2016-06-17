@@ -58,9 +58,8 @@ feature {NONE} -- Initialization
 			l_file.put_string ("end:   " + l_end.fine_second.out + "%N")
 			l_file.put_string ("total: " + (l_end.fine_second - l_start.fine_second).out + "%N")
 
-
-
 			l_file.close
+			l_system.close_all
 		end
 
 feature {NONE} -- Implementation
