@@ -3,7 +3,7 @@
 	<description>eav implementation</description>
 	<target name="eav">
 		<root all_classes="true"/>
-		<option warning="true" void_safety="transitional" syntax="provisional">
+		<option profile="false" warning="true" void_safety="transitional" syntax="provisional">
 			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
 		</option>
 		<setting name="console_application" value="true"/>
@@ -13,7 +13,7 @@
 		<library name="json_ext" location="..\json_ext\json_ext.ecf"/>
 		<library name="randomizer" location="..\randomizer\randomizer.ecf"/>
 		<library name="sqlite" location="$ISE_LIBRARY\unstable\library\persistency\database\sqlite3\sqlite-safe.ecf"/>
-		<library name="test_extension" location="$GITHUB\test_extension\test_extension.ecf"/>
+		<library name="test_extension" location="..\test_extension\test_extension.ecf"/>
 		<library name="time" location="$ISE_LIBRARY\library\time\time-safe.ecf"/>
 		<library name="uuid" location="$ISE_LIBRARY\library\uuid\uuid-safe.ecf"/>
 		<cluster name="eav" location=".\" recursive="true">
@@ -36,10 +36,36 @@
 			<exclude>/EIFGENs$</exclude>
 			<include>tests</include>
 		</file_rule>
-		<option profile="false">
+		<option profile="true">
 		</option>
 		<setting name="console_application" value="true"/>
 		<library name="testing" location="$ISE_LIBRARY\library\testing\testing-safe.ecf"/>
 		<cluster name="tests" location=".\tests\" recursive="true"/>
+	</target>
+	<target name="eav_profiled">
+		<description>The profiled version of the EAV library</description>
+		<root class="STRESS_LIBRARY_APPLICATION" feature="make"/>
+		<file_rule>
+			<exclude>/.CVS$</exclude>
+			<exclude>/.EIFGENs$</exclude>
+			<exclude>/.git$</exclude>
+			<exclude>/.svn$</exclude>
+			<include>tests</include>
+		</file_rule>
+		<option profile="true" void_safety="transitional" syntax="provisional">
+		</option>
+		<setting name="console_application" value="true"/>
+		<setting name="executable_name" value="eav_profiled"/>
+		<library name="base" location="$ISE_LIBRARY\library\base\base-safe.ecf"/>
+		<library name="decimal" location="$ISE_LIBRARY\contrib\library\math\decimal\decimal\decimal-safe.ecf"/>
+		<library name="framework" location="..\framework\framework.ecf"/>
+		<library name="json_ext" location="..\json_ext\json_ext.ecf"/>
+		<library name="randomizer" location="..\randomizer\randomizer.ecf"/>
+		<library name="sqlite" location="$ISE_LIBRARY\unstable\library\persistency\database\sqlite3\sqlite-safe.ecf"/>
+		<library name="test_extension" location="..\test_extension\test_extension.ecf"/>
+		<library name="testing" location="$ISE_LIBRARY\library\testing\testing-safe.ecf"/>
+		<library name="time" location="$ISE_LIBRARY\library\time\time-safe.ecf"/>
+		<library name="uuid" location="$ISE_LIBRARY\library\uuid\uuid-safe.ecf"/>
+		<cluster name="eav" location=".\" recursive="true"/>
 	</target>
 </system>

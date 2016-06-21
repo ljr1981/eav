@@ -58,7 +58,7 @@ feature -- Queries
 
 	first_database: EAV_DATABASE
 			-- `last_database'
-		do
+		once ("object")
 			check has_content: not databases.is_empty end
 			databases.start
 			Result := databases.item_for_iteration.db

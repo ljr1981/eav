@@ -291,7 +291,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 				do_nothing -- soon: just get the ent_id
 			else
 				store_new_entity (a_entity_name)
-				recently_found_entities.force (a_entity_name)
+				recently_found_entities.force (a_entity_name, a_entity_name.case_insensitive_hash_code)
 			end
 			last_entity_id := entity_id (a_entity_name)
 		ensure
@@ -324,7 +324,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			Result := recently_found_entities.has (a_entity_name)
+			Result := recently_found_entities.has (a_entity_name.case_insensitive_hash_code)
 			if not Result then
 				create l_query.make ("SELECT ent_name FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
 				l_result := l_query.execute_new
@@ -349,7 +349,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 	last_entity_id: INTEGER_64
 			-- `last_entity_id' of last accessed `entity_id'.
 
-	recently_found_entities: ARRAYED_LIST [STRING]
+	recently_found_entities: HASH_TABLE [STRING, INTEGER]
 			-- `recently_found_entities'.
 		attribute
 			create Result.make (50)
@@ -360,57 +360,66 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 
 	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64)
 			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
-		local
-			l_value_table: STRING
-			l_value: STRING
 		do
-			create l_value_table.make_empty
-			create l_value.make_empty
 				-- Compute attribute data type
-			if attached {DATE} a_value as al_value then
-				l_value_table := date_value_table_name; l_value := al_value.out
-			elseif attached {DATE_TIME} a_value as al_value then
-				l_value_table := date_value_table_name; l_value := al_value.out
-			elseif attached {CHARACTER} a_value as al_value then
-				l_value_table := text_value_table_name; l_value := al_value.out
+			if attached {ABSOLUTE} a_value as al_value then
+				value_table := date_value_table_name; value := al_value.out
 			elseif attached {STRING} a_value as al_value then
-				l_value_table := text_value_table_name; l_value := al_value.out
+				value_table := text_value_table_name; value := al_value.out
 			elseif attached {INTEGER} a_value as al_value then
-				l_value_table := integer_value_table_name; l_value := al_value.out
-			elseif attached {REAL} a_value as al_value then
-				l_value_table := real_value_table_name; l_value := al_value.out
-			elseif attached {DECIMAL} a_value as al_value then
-				l_value_table := real_value_table_name; l_value := al_value.out
+				value_table := integer_value_table_name; value := al_value.out
+			elseif attached {NUMERIC} a_value as al_value then -- Forms of {REAL} and {DECIMAL}
+				value_table := real_value_table_name; value := al_value.out
 			elseif attached {BOOLEAN} a_value as al_value then
-				l_value_table := integer_value_table_name; l_value := al_value.to_integer.out
-			elseif attached {NUMERIC} a_value as al_value then
-				-- For now: Please choose between: INTEGER, REAL, or DECIMAL in the source object data type.
-				check numeric_data_type: False end
+				value_table := integer_value_table_name; value := al_value.to_integer.out
+			elseif attached {CHARACTER} a_value as al_value then
+				value_table := text_value_table_name; value := al_value.out
 			else
 				check unknown_data_type: False end
 			end
 
 				-- Handle storage of attribute meta data
-			store_attribute_name (a_attribute_name, a_entity_id, l_value_table)
+			store_attribute_name (a_attribute_name, a_entity_id, value_table)
 
 				-- Store the actual attribute data
 			database.begin_transaction (False)
-
-			store_with_modify_or_insert (l_value_table, l_value, last_attribute_id, a_entity_id)
-
+			store_with_modify_or_insert (value_table, value, last_attribute_id, a_entity_id)
 			database.commit
 		end
+
+	value: STRING attribute create Result.make_empty end
+	value_table: STRING attribute create Result.make_empty end
 
 	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id, a_entity_id: INTEGER_64)
 			-- `store_with_modify_or_insert' of `a_value' for `a_attribute_id' and `a_entity_id'.
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
 			l_modify: SQLITE_MODIFY_STATEMENT
+			l_sql: STRING
 		do
-			create l_modify.make ("UPDATE " + a_table + " SET val_item = '" + a_value + "' WHERE  atr_id = " + a_attribute_id.out + " and instance_id = " + a_entity_id.out + ";", database)
+			l_sql := "UPDATE "
+			l_sql.append_string_general (a_table)
+			l_sql.append_string_general (" SET val_item = '")
+			l_sql.append_string_general (a_value)
+			l_sql.append_string_general ("' WHERE  atr_id = ")
+			l_sql.append_string_general (a_attribute_id.out)
+			l_sql.append_string_general (" and instance_id = ")
+			l_sql.append_string_general (a_entity_id.out)
+			l_sql.append_string_general (";")
+
+			create l_modify.make (l_sql, database)
 			l_modify.execute
 			if l_modify.changes_count = 0 then
-				create l_insert.make ("INSERT OR REPLACE INTO " + a_table + " (atr_id, instance_id, val_item) VALUES (" + a_attribute_id.out + "," + a_entity_id.out + ",'" + a_value + "');", database)
+				l_sql := "INSERT OR REPLACE INTO "
+				l_sql.append_string_general (a_table)
+				l_sql.append_string_general (" (atr_id, instance_id, val_item) VALUES (")
+				l_sql.append_string_general (a_attribute_id.out)
+				l_sql.append_string_general (",")
+				l_sql.append_string_general (a_entity_id.out)
+				l_sql.append_string_general (",'")
+				l_sql.append_string_general (a_value)
+				l_sql.append_string_general ("');")
+				create l_insert.make (l_sql, database)
 				l_insert.execute
 			end
 		end
@@ -422,7 +431,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				do_nothing -- soon: just get the atr_id
 			else
 				store_new_attribute (a_name, a_entity_id, a_value_table)
-				recently_found_attributes.force (a_name)
+				recently_found_attributes.force (a_name, a_name.case_insensitive_hash_code)
 			end
 			last_attribute_id := attribute_id (a_name)
 		ensure
@@ -449,6 +458,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
 				])
 			database.commit
+			recently_found_attributes.force (a_name, a_name.case_insensitive_hash_code)
 		end
 
 	has_attribute (a_name: STRING): BOOLEAN
@@ -457,7 +467,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			Result := recently_found_attributes.has (a_name)
+			Result := recently_found_attributes.has (a_name.case_insensitive_hash_code)
 			if not Result then
 				create l_query.make ("SELECT atr_name FROM attribute WHERE atr_name = '" + a_name + "';", database)
 				l_result := l_query.execute_new
@@ -482,7 +492,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 	last_attribute_id: INTEGER_64
 			-- `last_attribute_id' of last accessed `attribute_id'.
 
-	recently_found_attributes: ARRAYED_LIST [STRING]
+	recently_found_attributes: HASH_TABLE [STRING, INTEGER]
 			-- `recently_found_attributes'.
 		attribute
 			create Result.make (50)

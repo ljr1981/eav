@@ -28,6 +28,11 @@ inherit
 			default_create
 		end
 
+	RANDOMIZER
+		undefine
+			default_create
+		end
+
 feature -- Generic Testing
 
 	creation_test
@@ -35,6 +40,23 @@ feature -- Generic Testing
 			l_data_manager: EAV_DATA_MANAGER [MOCK_OBJECT]
 		do
 			create l_data_manager
+		end
+
+	hash_test
+		local
+			l_list: HASH_TABLE [STRING, INTEGER]
+			l_name: STRING
+			l_count: INTEGER
+		do
+			l_count := 100
+			create l_list.make (l_count)
+			across
+				1 |..| l_count as ic
+			loop
+				l_name := random_city_name
+				l_list.force (l_name, l_name.hash_code)
+			end
+			assert_integers_equal ("x_count", l_count, l_list.count)
 		end
 
 	general_testing
