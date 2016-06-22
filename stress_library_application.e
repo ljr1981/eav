@@ -35,8 +35,8 @@ feature {NONE} -- Initialization
 			create l_system.make ("system", test_data_path)
 			create l_file.make_create_read_write ("stress_test_results.txt")
 
-				-- 1000x test of 3x dbe features ...
-			l_mocks := fresh_mocks (1000)
+				-- 10_000 x test of 3x dbe features ...
+			l_mocks := fresh_mocks (10_000)
 			from
 				create l_start.make_now
 				print (l_start.fine_second.out + " ... waiting until 0.000 ...")
@@ -45,15 +45,21 @@ feature {NONE} -- Initialization
 			loop
 				create l_start.make_now
 			end
+
 			print ("%N" + l_start.out + "%N")
+
+			l_system.first_database.begin_transaction
 			across
 				l_mocks as ic_mocks
 			loop
 				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
 			end
+			l_system.first_database.end_transaction
+
 			create l_end.make_now
 			print (l_end.out + "%N")
-			l_file.put_string ("1000x%N")
+
+			l_file.put_string ("10_000x%N")
 			l_file.put_string ("start: " + l_start.fine_second.out + "%N")
 			l_file.put_string ("end:   " + l_end.fine_second.out + "%N")
 			l_file.put_string ("total: " + (l_end.fine_second - l_start.fine_second).out + "%N")

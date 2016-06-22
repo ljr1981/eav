@@ -38,7 +38,7 @@ inherit
 			default_create
 		end
 
-feature -- Test routines
+feature -- Testing: EAV writing
 
 	write_test
 			-- `write_test'

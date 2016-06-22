@@ -27,7 +27,7 @@ feature {NONE} -- Implementation
 			l_dir.delete_content
 		end
 
-feature {NONE} -- Implementation: Constants
+feature {EQA_TEST_SET} -- Implementation: Constants
 
 	test_data_path: STRING = "\tests\data\"
 			-- `test_data_path' location on file system.

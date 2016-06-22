@@ -191,6 +191,7 @@ feature -- Store Operations
 			store_entity (a_object.computed_entity_name)
 
 				-- New instance or existing?
+			--database.begin_transaction (False)
 			if a_object.instance_id = new_instance_id_constant then
 				last_instance_count := next_entity_instance_id (a_object.Computed_entity_name)
 				a_object.set_instance_id (last_instance_count)
@@ -204,6 +205,17 @@ feature -- Store Operations
 			loop
 				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object.instance_id)
 			end
+			--database.commit
+		end
+
+	begin_transaction
+		do
+			database.begin_transaction (False)
+		end
+
+	end_transaction
+		do
+			database.commit
 		end
 
 feature {NONE} -- Implementation: Store Operations
@@ -233,10 +245,8 @@ feature {NONE} -- Implementation: Store Operations
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 		do
-			database.begin_transaction (False)
 			create l_modify.make ("UPDATE Entity SET ent_count = " + a_new_count.out + " WHERE ent_name = '" + a_entity_name + "';", database)
 			l_modify.execute
-			database.commit
 		end
 
 feature -- Retrieve (fetch by ...) Operations
@@ -307,7 +317,6 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 		do
 			create l_insert.make ("INSERT INTO Entity (ent_uuid, ent_name, ent_count, is_deleted, modified_date) VALUES (:ENT_UUID, :ENT_NAME, :ENT_CNT, :IS_DEL, :MOD_DATE);", database)
 			check l_insert_is_compiled: l_insert.is_compiled end
-			database.begin_transaction (False)
 			l_insert.execute_with_arguments ([
 				create {SQLITE_STRING_ARG}.make (":ENT_UUID", uuid.out),
 				create {SQLITE_STRING_ARG}.make (":ENT_NAME", a_entity_name),
@@ -315,7 +324,6 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 				create {SQLITE_INTEGER_ARG}.make (":IS_DEL", 0),
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out)
 				])
-			database.commit
 		end
 
 	has_entity (a_entity_name: STRING): BOOLEAN
@@ -382,9 +390,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			store_attribute_name (a_attribute_name, a_entity_id, value_table)
 
 				-- Store the actual attribute data
-			database.begin_transaction (False)
 			store_with_modify_or_insert (value_table, value, last_attribute_id, a_entity_id)
-			database.commit
 		end
 
 	value: STRING attribute create Result.make_empty end
@@ -447,7 +453,6 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		do
 			create l_insert.make ("INSERT INTO Attribute (ent_id, atr_uuid, atr_name, atr_value_table, is_deleted, modified_date, modifier_id) VALUES (:ENT_ID, :ATR_UUID, :ATR_NAME, :ATR_VAL_TAB, :IS_DEL, :MOD_DATE, :MOD_ID);", database)
 			check l_insert_is_compiled: l_insert.is_compiled end
-			database.begin_transaction (False)
 			l_insert.execute_with_arguments ([
 				create {SQLITE_INTEGER_ARG}.make (":ENT_ID", a_entity_id),
 				create {SQLITE_STRING_ARG}.make (":ATR_UUID", uuid.out),
@@ -457,7 +462,6 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
 				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
 				])
-			database.commit
 			recently_found_attributes.force (a_name, a_name.case_insensitive_hash_code)
 		end
 
