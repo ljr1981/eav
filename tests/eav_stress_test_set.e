@@ -60,28 +60,20 @@ feature -- Testing: EAV writing
 				-- 10x test of 3x dbe features ...
 			l_mocks := fresh_mocks (10)
 			create l_start.make_now
-			across
-				l_mocks as ic_mocks
-			loop
-				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
-			end
+			l_system.database_n (1).store_objects (l_mocks)
 			create l_end.make_now
 			print ("start: " + l_start.fine_second.out + "%N")
 			print ("end:   " + l_end.fine_second.out + "%N")
-			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 1.0) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 0.1) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
 
 				-- 10x test of 3x dbe features ...
 			l_mocks := fresh_mocks (712)
 			create l_start.make_now
-			across
-				l_mocks as ic_mocks
-			loop
-				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
-			end
+			l_system.database_n (1).store_objects (l_mocks)
 			create l_end.make_now
 			print ("start: " + l_start.fine_second.out + "%N")
 			print ("end:   " + l_end.fine_second.out + "%N")
-			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 90) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 2.1) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
 
 			l_system.close_all
 			remove_data

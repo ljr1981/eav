@@ -34,6 +34,10 @@ feature -- Creation Tests
 
 	creation_tests
 			-- `creation_tests'.
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_entity: EAV_ENTITY
 			l_attribute: EAV_ATTRIBUTE
@@ -51,6 +55,10 @@ feature -- Creation Tests
 
 	eav_system_tests
 			-- `eav_system_tests'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_system: EAV_SYSTEM
 		do

@@ -36,6 +36,10 @@ feature -- Creation Tests
 
 	creation_and_setter_tests
 			-- `db_able_creation_tests'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_mock: MOCK_OBJECT
 		do
@@ -55,6 +59,10 @@ feature -- Creation Tests
 
 	setters_tests
 			-- `setters_tests'.
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
@@ -89,6 +97,10 @@ feature -- Storable Tests
 
 	db_enabled_store_tests
 			-- `db_enabled_store_tests'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
@@ -110,6 +122,10 @@ feature -- Storable Tests
 
 	two_entities_tests
 			-- `two_entities_tests'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_bugs,
@@ -139,6 +155,10 @@ feature -- Storable Tests
 
 	changing_object_data_tests
 			-- `changing_object_data_tests'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
