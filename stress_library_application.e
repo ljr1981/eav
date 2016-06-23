@@ -35,15 +35,7 @@ feature {NONE} -- Initialization
 
 				-- 10_000 x test of 3x dbe features ...
 			l_mocks := fresh_mocks (10_000)
-			from
-				create l_start.make_now
-				print (l_start.fine_second.out + " ... waiting until 0.000 ...")
-			until
-				l_start.fine_second < 1
-			loop
-				create l_start.make_now
-			end
-
+			create l_start.make_now
 			print ("%N" + l_start.out + "%N")
 
 			l_system.database_n (1).store_objects (l_mocks)
