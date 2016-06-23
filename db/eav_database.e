@@ -10,6 +10,8 @@ class
 inherit
 	RANDOMIZER
 
+	EAV_CONSTANTS
+
 create
 	make_empty,
 	make
@@ -83,14 +85,14 @@ feature {NONE} -- Implementation: EAV Build Operations
 		do
 			create l_modify.make (modify_statement ("Entity", <<create_table, check_for_exists>>,
 													<<
-													integer_field ("ent_id") + primary_key + ascending_order + autoincrement,
-													integer_field ("sys_id"),
-													text_field ("ent_uuid"),
-													text_field ("ent_name"),
-													integer_field ("ent_count"),
-													boolean_field ("is_deleted"),
-													date_field ("modified_date"),
-													integer_field ("modifier_id")
+													integer_field (entity_ent_id_field_name.twin) + primary_key + ascending_order + autoincrement,
+													integer_field (sys_id_field_name.twin),
+													text_field (entity_ent_uuid_field_name.twin),
+													text_field (entity_ent_name_field_name.twin),
+													integer_field (entity_ent_count_field_name.twin),
+													boolean_field (is_deleted_field_name.twin),
+													date_field (modified_date_field_name.twin),
+													integer_field (modifier_id_field_name.twin)
 													>>), database)
 			l_modify.execute
 		end
@@ -103,14 +105,14 @@ feature {NONE} -- Implementation: EAV Build Operations
 		do
 			create l_modify.make (modify_statement ("Attribute", <<create_table, check_for_exists>>,
 													<<
-													integer_field ("atr_id") + primary_key + ascending_order + autoincrement,
-													integer_field ("ent_id"),
-													text_field ("atr_uuid"),
-													text_field ("atr_name"),
-													text_field ("atr_value_table"),
-													boolean_field ("is_deleted"),
-													date_field ("modified_date"),
-													integer_field ("modifier_id")
+													integer_field (attribute_atr_id_field_name.twin) + primary_key + ascending_order + autoincrement,
+													integer_field (entity_ent_id_field_name.twin),
+													text_field (attribute_atr_uuid_field_name.twin),
+													text_field (attribute_atr_name_field_name.twin),
+													text_field (attribute_atr_value_table_field_name.twin),
+													boolean_field (is_deleted_field_name.twin),
+													date_field (modified_date_field_name.twin),
+													integer_field (modifier_id_field_name.twin)
 													>>), database)
 			l_modify.execute
 		end
@@ -121,43 +123,43 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 	build_character_value
 			-- `build_character_value'.
-		do build_value (character_value_table_name, agent character_field) end
+		do build_value (character_value_table_name.twin, agent character_field) end
 
 	build_varchar_value
 			-- `build_varchar_value'.
-		do build_value (varchar_value_table_name, agent varchar_field) end
+		do build_value (varchar_value_table_name.twin, agent varchar_field) end
 
 	build_text_value
 			-- `build_text_value'
-		do build_value (text_value_table_name, agent text_field) end
+		do build_value (text_value_table_name.twin, agent text_field) end
 
 	build_numeric_value
 			-- `build_numeric_value'.
-		do build_value (number_value_table_name, agent numeric_field) end
+		do build_value (number_value_table_name.twin, agent numeric_field) end
 
 	build_boolean_value
 			-- `build_boolean_value'.
-		do build_value (boolean_value_table_name, agent boolean_field) end
+		do build_value (boolean_value_table_name.twin, agent boolean_field) end
 
 	build_integer_value
 			-- `build_integer_value'.
-		do build_value (integer_value_table_name, agent integer_field) end
+		do build_value (integer_value_table_name.twin, agent integer_field) end
 
 	build_float_value
 			-- `build_float_value'.
-		do build_value (float_value_table_name, agent float_field) end
+		do build_value (float_value_table_name.twin, agent float_field) end
 
 	build_double_value
 			-- `build_double_value'.
-		do build_value (double_value_table_name, agent double_field) end
+		do build_value (double_value_table_name.twin, agent double_field) end
 
 	build_real_value
 			-- `build_real_value'.
-		do build_value (real_value_table_name, agent real_field) end
+		do build_value (real_value_table_name.twin, agent real_field) end
 
 	build_blob_value
 			-- `build_blob_value'.
-		do build_value (blob_value_table_name, agent blob_field) end
+		do build_value (blob_value_table_name.twin, agent blob_field) end
 
 	build_value (a_table_name: STRING; a_item_field_agent: FUNCTION [TUPLE [STRING], STRING])
 			-- `build_varchar_value' table (if needed).
@@ -168,15 +170,15 @@ feature {NONE} -- Implementation: EAV Build Operations
 		do
 			a_item_field_agent.call ("val_item")
 			check has_result: attached {STRING} a_item_field_agent.last_result as al_result then l_last_result := al_result end
-			create l_modify.make (modify_statement (a_table_name, <<create_table, check_for_exists>>,
+			create l_modify.make (modify_statement (a_table_name, <<create_table.twin, check_for_exists.twin>>,
 													<<
-													integer_field ("val_id") + primary_key + ascending_order + autoincrement,
-													integer_field ("atr_id"),
-													integer_field ("instance_id"),
-													l_last_result,
-													boolean_field ("is_deleted"),
-													date_field ("modified_date"),
-													integer_field ("modifier_id")
+													integer_field (value_val_id_field_name.twin) + primary_key.twin + ascending_order.twin + autoincrement.twin,
+													integer_field (attribute_atr_id_field_name.twin),
+													integer_field (instance_id_field_name.twin),
+													l_last_result.twin,
+													boolean_field (is_deleted_field_name.twin),
+													date_field (modified_date_field_name.twin),
+													integer_field (modifier_id_field_name.twin)
 													>>), database)
 			l_modify.execute
 		end
@@ -240,8 +242,18 @@ feature {NONE} -- Implementation: Store Operations
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_sql: STRING
 		do
-			create l_query.make ("SELECT ent_count FROM Entity WHERE ent_name = '" + a_entity_name + "';", database)
+			l_sql := SELECT_keyword_string.twin
+			l_sql.append_string_general (entity_ent_count_field_name)
+			l_sql.append_string_general (FROM_keyword_string)
+			l_sql.append_string_general (entity_table_name)
+			l_sql.append_string_general (WHERE_keyword_string)
+			l_sql.append_string_general (entity_ent_name_field_name)
+			l_sql.append_string_general (" = '")
+			l_sql.append_string_general (a_entity_name)
+			l_sql.append_string_general ("';")
+			create l_query.make (l_sql, database)
 			l_result := l_query.execute_new
 			l_result.start
 			if not l_result.after then
@@ -259,8 +271,20 @@ feature {NONE} -- Implementation: Store Operations
 			-- `update_entity_instance_count' for `a_entity_name' to `a_new_count'.
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
+			l_sql: STRING
 		do
-			create l_modify.make ("UPDATE Entity SET ent_count = " + a_new_count.out + " WHERE ent_name = '" + a_entity_name + "';", database)
+			l_sql := "UPDATE "
+			l_sql.append_string_general (entity_table_name)
+			l_sql.append_string_general (SET_keyword_string)
+			l_sql.append_string_general (entity_ent_count_field_name)
+			l_sql.append_string_general (" = ")
+			l_sql.append_string_general (a_new_count.out)
+			l_sql.append_string_general (WHERE_keyword_string)
+			l_sql.append_string_general (entity_ent_name_field_name)
+			l_sql.append_string_general (" = '")
+			l_sql.append_string_general (a_entity_name)
+			l_sql.append_string_general ("';")
+			create l_modify.make (l_sql, database)
 			l_modify.execute
 		end
 
