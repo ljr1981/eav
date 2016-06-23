@@ -37,7 +37,7 @@ feature -- Generic Testing
 
 	creation_test
 		local
-			l_data_manager: EAV_DATA_MANAGER [MOCK_OBJECT]
+			l_data_manager: EAV_DATA_MANAGER
 		do
 			create l_data_manager
 		end

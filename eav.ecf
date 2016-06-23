@@ -3,6 +3,13 @@
 	<description>eav implementation</description>
 	<target name="eav">
 		<root all_classes="true"/>
+		<file_rule>
+			<exclude>/.git$</exclude>
+			<exclude>/.svn$</exclude>
+			<exclude>/CVS$</exclude>
+			<exclude>/EIFGENs$</exclude>
+			<exclude>/tests$</exclude>
+		</file_rule>
 		<option profile="false" warning="true" void_safety="transitional" syntax="provisional">
 			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
 		</option>
@@ -36,7 +43,7 @@
 			<exclude>/EIFGENs$</exclude>
 			<include>tests</include>
 		</file_rule>
-		<option profile="true">
+		<option profile="false">
 		</option>
 		<setting name="console_application" value="true"/>
 		<library name="testing" location="$ISE_LIBRARY\library\testing\testing-safe.ecf"/>
@@ -47,9 +54,9 @@
 		<root class="STRESS_LIBRARY_APPLICATION" feature="make"/>
 		<file_rule>
 			<exclude>/.CVS$</exclude>
-			<exclude>/.EIFGENs$</exclude>
 			<exclude>/.git$</exclude>
 			<exclude>/.svn$</exclude>
+			<exclude>/EIFGENs$</exclude>
 			<include>tests</include>
 		</file_rule>
 		<option profile="true" void_safety="transitional" syntax="provisional">

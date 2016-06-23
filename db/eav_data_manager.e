@@ -1,14 +1,14 @@
 note
 	description: "[
-		Representation of an effected {REPLACE_ME}.
+		Representation of an effected {EAV_DATA_MANAGER}.
 		]"
 
 class
-	EAV_DATA_MANAGER [DBE -> EAV_DB_ENABLED]
+	EAV_DATA_MANAGER
 
 feature -- Basic Operations
 
-	fetch_objects_by_ids (a_objects: ARRAY [TUPLE [object: DBE; id: INTEGER_64]])
+	fetch_objects_by_ids (a_objects: ARRAY [TUPLE [object: EAV_DB_ENABLED; id: INTEGER_64]])
 			-- `fetch_objects_by_ids' in `a_objects', filling in each `object' with data from `id'.
 			-- Each `object' passed will be updated with its data. Objects not updated will still
 			-- be {EAV_DB_ENABLED}.is_new = True and {EAV_DB_ENABLED}.is_defaulted = True.
@@ -20,12 +20,12 @@ feature -- Basic Operations
 			end
 		end
 
-	fetch_by_ids (a_object: DBE; a_ids: ARRAY [INTEGER_64]): ARRAYED_LIST [DBE]
+	fetch_by_ids (a_object: EAV_DB_ENABLED; a_ids: ARRAY [INTEGER_64]): ARRAYED_LIST [EAV_DB_ENABLED]
 			-- `fetch_by_ids' using `a_object' as a "twinning" template, fetching the
 			-- data from some data source by the {INTEGER_64} `id' in `a_ids', and
 			-- loading each twinned `a_object' into the Result list.
 		local
-			l_object: DBE
+			l_object: EAV_DB_ENABLED
 		do
 			create Result.make (a_ids.count)
 			across
@@ -37,7 +37,7 @@ feature -- Basic Operations
 			end
 		end
 
-	fetch_by_id (a_object: DBE; a_id: INTEGER_64)
+	fetch_by_id (a_object: EAV_DB_ENABLED; a_id: INTEGER_64)
 			-- `fetch_by_id' of `a_id' into `a_object'.
 		require
 			is_new_default: a_object.is_new and not a_object.is_defaulted
@@ -50,7 +50,7 @@ feature -- Basic Operations
 			end
 		end
 
-	entity_id (a_object: DBE): INTEGER_64
+	entity_id (a_object: EAV_DB_ENABLED): INTEGER_64
 			-- ??
 		local
 			l_query: SQLITE_QUERY_STATEMENT

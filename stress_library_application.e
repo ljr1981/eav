@@ -1,8 +1,7 @@
 note
-	description: "Summary description for {STRESS_LIBRARY_APPLICATION}."
-	author: ""
-	date: "$Date$"
-	revision: "$Revision$"
+	description: "[
+		Representation of a {STRESS_LIBRARY_APPLICATION}.
+		]"
 
 class
 	STRESS_LIBRARY_APPLICATION
@@ -24,7 +23,6 @@ feature {NONE} -- Initialization
 			-- `make' Current.
 		local
 			l_system: EAV_SYSTEM
-			l_manager: EAV_DATA_MANAGER [MOCK_OBJECT]
 			l_mock: MOCK_OBJECT
 			l_start,
 			l_end: DATE_TIME
@@ -48,13 +46,7 @@ feature {NONE} -- Initialization
 
 			print ("%N" + l_start.out + "%N")
 
-			l_system.first_database.begin_transaction
-			across
-				l_mocks as ic_mocks
-			loop
-				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
-			end
-			l_system.first_database.end_transaction
+			l_system.database_n (1).store_objects (l_mocks)
 
 			create l_end.make_now
 			print (l_end.out + "%N")

@@ -49,19 +49,35 @@ feature {NONE} -- Initialization
 			across
 				a_databases as ic_databases
 			loop
-				databases.force ([a_location, create {EAV_DATABASE}.make (a_location, ic_databases.item)], ic_databases.item)
-				check last_added_db: attached databases.at (ic_databases.item) as al_item then build_eav (al_item.db) end
+				databases.force ([a_location, create {EAV_DATABASE}.make (a_location, ic_databases.item), ic_databases.item], ic_databases.cursor_index)
+				check last_added_db: attached databases.at (ic_databases.cursor_index) as al_item then build_eav (al_item.db) end
 			end
 		end
 
 feature -- Queries
 
 	first_database: EAV_DATABASE
-			-- `last_database'
+			-- `first_database'
 		once ("object")
-			check has_content: not databases.is_empty end
-			databases.start
-			Result := databases.item_for_iteration.db
+			check has_content: not databases.is_empty and then attached databases.at (1) as al_database then
+				Result := al_database.db
+			end
+		end
+
+	database_n (i: INTEGER): EAV_DATABASE
+			-- `database_n' on `i'.
+		require
+			at_least_i: i > 0 and has_count (i)
+		do
+			check attached databases.at (i) as al_database then
+				Result := al_database.db
+			end
+		end
+
+	has_count (i: INTEGER): BOOLEAN
+			-- `has_count' `i'?
+		do
+			Result := not databases.is_empty and then databases.count >= i
 		end
 
 feature -- Basic Operations
@@ -84,7 +100,7 @@ feature -- Basic Operations
 
 feature {NONE} -- Implementation
 
-	databases: HASH_TABLE [TUPLE [location: STRING; db: EAV_DATABASE], STRING]
+	databases: HASH_TABLE [TUPLE [location: STRING; db: EAV_DATABASE; name: STRING], INTEGER]
 			-- `databases' based on {EAV_DATABASE} and a name.
 		attribute
 			create Result.make (10)

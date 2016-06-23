@@ -183,15 +183,29 @@ feature {NONE} -- Implementation: EAV Build Operations
 
 feature -- Store Operations
 
-	store (a_object: EAV_DB_ENABLED)
-			-- `store' `a_object' into `database'.
+	store_objects (a_objects: ITERABLE [EAV_DB_ENABLED])
+			-- `store_objects' in `a_objects' with `store_object'.
+		do
+			begin_transaction
+			across
+				a_objects as ic
+			loop
+				store_object (ic.item)
+			end
+			end_transaction
+		end
+
+	store_object (a_object: EAV_DB_ENABLED)
+			-- `store_object' `a_object' into `database'.
+		local
+			l_is_new: BOOLEAN
 		do
 			-- entity_name, feature_data (a_object).to_array
 				-- Handle Entity first ...
 			store_entity (a_object.computed_entity_name)
 
 				-- New instance or existing?
-			--database.begin_transaction (False)
+			l_is_new := a_object.instance_id = new_instance_id_constant
 			if a_object.instance_id = new_instance_id_constant then
 				last_instance_count := next_entity_instance_id (a_object.Computed_entity_name)
 				a_object.set_instance_id (last_instance_count)
@@ -203,17 +217,18 @@ feature -- Store Operations
 			across
 				a_object.feature_data (a_object) as ic_values
 			loop
-				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object.instance_id)
+				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object.instance_id, l_is_new)
 			end
-			--database.commit
 		end
 
 	begin_transaction
+			-- `begin_transaction' on `database'.
 		do
 			database.begin_transaction (False)
 		end
 
 	end_transaction
+			-- `end_transaction' with `commit' on `database'.
 		do
 			database.commit
 		end
@@ -366,7 +381,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 
 feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 
-	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64)
+	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64; a_is_new: BOOLEAN)
 			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
 		do
 				-- Compute attribute data type
@@ -390,32 +405,20 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			store_attribute_name (a_attribute_name, a_entity_id, value_table)
 
 				-- Store the actual attribute data
-			store_with_modify_or_insert (value_table, value, last_attribute_id, a_entity_id)
+			store_with_modify_or_insert (value_table, value, last_attribute_id, a_entity_id, a_is_new)
 		end
 
 	value: STRING attribute create Result.make_empty end
 	value_table: STRING attribute create Result.make_empty end
 
-	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id, a_entity_id: INTEGER_64)
+	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id, a_entity_id: INTEGER_64; a_is_new: BOOLEAN)
 			-- `store_with_modify_or_insert' of `a_value' for `a_attribute_id' and `a_entity_id'.
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
 			l_modify: SQLITE_MODIFY_STATEMENT
 			l_sql: STRING
 		do
-			l_sql := "UPDATE "
-			l_sql.append_string_general (a_table)
-			l_sql.append_string_general (" SET val_item = '")
-			l_sql.append_string_general (a_value)
-			l_sql.append_string_general ("' WHERE  atr_id = ")
-			l_sql.append_string_general (a_attribute_id.out)
-			l_sql.append_string_general (" and instance_id = ")
-			l_sql.append_string_general (a_entity_id.out)
-			l_sql.append_string_general (";")
-
-			create l_modify.make (l_sql, database)
-			l_modify.execute
-			if l_modify.changes_count = 0 then
+			if a_is_new then
 				l_sql := "INSERT OR REPLACE INTO "
 				l_sql.append_string_general (a_table)
 				l_sql.append_string_general (" (atr_id, instance_id, val_item) VALUES (")
@@ -427,6 +430,19 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				l_sql.append_string_general ("');")
 				create l_insert.make (l_sql, database)
 				l_insert.execute
+			else
+				l_sql := "UPDATE "
+				l_sql.append_string_general (a_table)
+				l_sql.append_string_general (" SET val_item = '")
+				l_sql.append_string_general (a_value)
+				l_sql.append_string_general ("' WHERE  atr_id = ")
+				l_sql.append_string_general (a_attribute_id.out)
+				l_sql.append_string_general (" and instance_id = ")
+				l_sql.append_string_general (a_entity_id.out)
+				l_sql.append_string_general (";")
+
+				create l_modify.make (l_sql, database)
+				l_modify.execute
 			end
 		end
 

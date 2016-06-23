@@ -38,7 +38,7 @@ feature -- Storage
 	store_in_database (a_object: EAV_DB_ENABLED; a_database: attached like database)
 			-- `store_in_database' `a_object' into `a_database'.
 		do
-			a_database.store (a_object)
+			a_database.store_object (a_object)
 		end
 
 feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
@@ -267,7 +267,7 @@ feature {NONE} -- Implementation: Database & Ops
 			-- `database' to which Current belongs.
 
 	store (a_object: EAV_DB_ENABLED)
-			-- `store' `a_object' into `database'.
+			-- `store_object' `a_object' into `database'.
 		do
 			check
 				has_database: attached database as al_database
