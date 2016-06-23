@@ -370,10 +370,23 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_sql: STRING
 		do
 			Result := recently_found_entities.has (a_entity_name.case_insensitive_hash_code)
 			if not Result then
-				create l_query.make ("SELECT ent_name FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
+				-- SELECT entity_name FROM entity WHERE entity_name = '<<a_entity_name>>';
+				l_sql := SELECT_keyword_string.twin
+				l_sql.append_string_general (entity_ent_name_field_name.twin)
+				l_sql.append_string_general (FROM_keyword_string.twin)
+				l_sql.append_string_general (entity_table_name.twin)
+				l_sql.append_string_general (WHERE_keyword_string.twin)
+				l_sql.append_string_general (entity_ent_name_field_name.twin)
+				l_sql.append_string_general (equals)
+				l_sql.append_character (open_single_quote)
+				l_sql.append_string_general (a_entity_name.twin)
+				l_sql.append_character (close_single_quote)
+				l_sql.append_character (semi_colon)
+				create l_query.make (l_sql, database)
 				l_result := l_query.execute_new
 				l_result.start
 				Result := not l_result.after and then
@@ -386,8 +399,20 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_sql: STRING
 		do
-			create l_query.make ("SELECT ent_id FROM entity WHERE ent_name = '" + a_entity_name + "';", database)
+			l_sql := SELECT_keyword_string.twin
+			l_sql.append_string_general (entity_ent_id_field_name.twin)
+			l_sql.append_string_general (FROM_keyword_string.twin)
+			l_sql.append_string_general (entity_table_name.twin)
+			l_sql.append_string_general (WHERE_keyword_string.twin)
+			l_sql.append_string_general (entity_ent_name_field_name.twin)
+			l_sql.append_string_general (equals)
+			l_sql.append_character (open_single_quote)
+			l_sql.append_string_general (a_entity_name.twin)
+			l_sql.append_character (close_single_quote)
+			l_sql.append_character (semi_colon)
+			create l_query.make (l_sql, database)
 			l_result := l_query.execute_new
 			l_result.start
 			Result := l_result.item.integer_64_value (1)
@@ -443,27 +468,41 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			l_sql: STRING
 		do
 			if a_is_new then
-				l_sql := "INSERT OR REPLACE INTO "
+				l_sql := INSERT_keyword_string.twin
+				l_sql.append_string_general (OR_keyword_string)
+				l_sql.append_string_general (REPLACE_keyword_string)
+				l_sql.append_string_general (INTO_keyword_string)
 				l_sql.append_string_general (a_table)
 				l_sql.append_string_general (" (atr_id, instance_id, val_item) VALUES (")
 				l_sql.append_string_general (a_attribute_id.out)
-				l_sql.append_string_general (",")
+				l_sql.append_character (comma)
 				l_sql.append_string_general (a_entity_id.out)
-				l_sql.append_string_general (",'")
+				l_sql.append_character (comma)
+				l_sql.append_character (open_single_quote)
 				l_sql.append_string_general (a_value)
-				l_sql.append_string_general ("');")
+				l_sql.append_character (close_single_quote)
+				l_sql.append_character (close_parenthesis)
+				l_sql.append_character (semi_colon)
 				create l_insert.make (l_sql, database)
 				l_insert.execute
 			else
-				l_sql := "UPDATE "
+				l_sql := UPDATE_keyword_string.twin
 				l_sql.append_string_general (a_table)
-				l_sql.append_string_general (" SET val_item = '")
+				l_sql.append_string_general (SET_keyword_string.twin)
+				l_sql.append_string_general (value_val_item_field_name.twin)
+				l_sql.append_string_general (equals.twin)
+				l_sql.append_character (open_single_quote)
 				l_sql.append_string_general (a_value)
-				l_sql.append_string_general ("' WHERE  atr_id = ")
+				l_sql.append_character (close_single_quote)
+				l_sql.append_string_general (WHERE_keyword_string.twin)
+				l_sql.append_string_general (attribute_atr_id_field_name.twin)
+				l_sql.append_string_general (equals.twin)
 				l_sql.append_string_general (a_attribute_id.out)
-				l_sql.append_string_general (" and instance_id = ")
+				l_sql.append_string_general (AND_keyword_string.twin)
+				l_sql.append_string_general (instance_id_field_name.twin)
+				l_sql.append_string_general (equals.twin)
 				l_sql.append_string_general (a_entity_id.out)
-				l_sql.append_string_general (";")
+				l_sql.append_character (semi_colon)
 
 				create l_modify.make (l_sql, database)
 				l_modify.execute
@@ -506,15 +545,13 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		end
 
 	has_attribute (a_name: STRING): BOOLEAN
-			-- `has_attribute' `a_name'?
+			-- `has_attribute' `a_name' in attributes table?
 		local
-			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
 			Result := recently_found_attributes.has (a_name.case_insensitive_hash_code)
 			if not Result then
-				create l_query.make ("SELECT atr_name FROM attribute WHERE atr_name = '" + a_name + "';", database)
-				l_result := l_query.execute_new
+				l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name)
 				l_result.start
 				Result := not l_result.after and then
 							l_result.item.string_value (1).same_string (a_name)
@@ -522,15 +559,26 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		end
 
 	attribute_id (a_name: STRING): INTEGER_64
-			-- `attribute_id' of `a_name'.
+			-- `attribute_id' of attribute named `a_name'.
+		local
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+		do
+			l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name)
+			l_result.start
+			Result := l_result.item.integer_64_value (1)
+		end
+
+	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name: STRING): SQLITE_STATEMENT_ITERATION_CURSOR
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_sql: STRING
 		do
-			create l_query.make ("SELECT atr_id FROM attribute WHERE atr_name = '" + a_name + "';", database)
-			l_result := l_query.execute_new
-			l_result.start
-			Result := l_result.item.integer_64_value (1)
+			l_sql := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals.twin
+			l_sql.append_string_general (a_name)
+			l_sql.append_string_general (close_single_quote_semi_colon.twin)
+			create l_query.make (l_sql, database)
+			Result := l_query.execute_new
 		end
 
 	last_attribute_id: INTEGER_64
@@ -580,6 +628,27 @@ feature {EAV_DB_ENABLED} -- Implementation: Constants
 
 	new_instance_id_constant: INTEGER_64 = 0
 			-- `new_instance_id_constant' is how Current recognizes "new" Entity instances.
+
+	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals: STRING
+			-- Front half of `select_atr_id_from_attribute_where_atr_name_equals'.
+		once
+			Result := SELECT_keyword_string.twin
+			Result.append_string_general (attribute_atr_id_field_name.twin)
+			Result.append_string_general (FROM_keyword_string.twin)
+			Result.append_string_general (attribute_table_name.twin)
+			Result.append_string_general (WHERE_keyword_string.twin)
+			Result.append_string_general (attribute_atr_name_field_name.twin)
+			Result.append_string_general (equals.twin)
+			Result.append_character (open_single_quote)
+		end
+
+	close_single_quote_semi_colon: STRING
+			-- Back half of `close_single_quote_semi_colon'.
+		once
+			create Result.make_empty
+			Result.append_character (close_single_quote)
+			Result.append_character (semi_colon)
+		end
 
 feature {NONE} -- Implementation: Constants
 
