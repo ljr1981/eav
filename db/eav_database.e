@@ -83,16 +83,16 @@ feature {NONE} -- Implementation: EAV Build Operations
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 		do
-			create l_modify.make (modify_statement ("Entity", <<create_table, check_for_exists>>,
+			create l_modify.make (modify_statement ("Entity", <<create_table_kw, IF_NOT_EXISTS_kw_phrase>>,
 													<<
-													integer_field (entity_ent_id_field_name.twin) + primary_key + ascending_order + autoincrement,
-													integer_field (sys_id_field_name.twin),
-													text_field (entity_ent_uuid_field_name.twin),
-													text_field (entity_ent_name_field_name.twin),
-													integer_field (entity_ent_count_field_name.twin),
-													boolean_field (is_deleted_field_name.twin),
-													date_field (modified_date_field_name.twin),
-													integer_field (modifier_id_field_name.twin)
+													integer_field ("ent_id") + primary_key_kw + ASC_kw + autoincrement_kw,
+													integer_field ("sys_id"),
+													text_field ("ent_uuid"),
+													text_field ("ent_name"),
+													integer_field ("ent_count"),
+													boolean_field ("is_deleted"),
+													date_field ("modified_date"),
+													integer_field ("modifier_id")
 													>>), database)
 			l_modify.execute
 		end
@@ -103,16 +103,16 @@ feature {NONE} -- Implementation: EAV Build Operations
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 		do
-			create l_modify.make (modify_statement ("Attribute", <<create_table, check_for_exists>>,
+			create l_modify.make (modify_statement ("Attribute", <<create_table_kw, IF_NOT_EXISTS_kw_phrase>>,
 													<<
-													integer_field (attribute_atr_id_field_name.twin) + primary_key + ascending_order + autoincrement,
-													integer_field (entity_ent_id_field_name.twin),
-													text_field (attribute_atr_uuid_field_name.twin),
-													text_field (attribute_atr_name_field_name.twin),
-													text_field (attribute_atr_value_table_field_name.twin),
-													boolean_field (is_deleted_field_name.twin),
-													date_field (modified_date_field_name.twin),
-													integer_field (modifier_id_field_name.twin)
+													integer_field ("atr_id") + primary_key_kw + ASC_kw + autoincrement_kw,
+													integer_field ("ent_id"),
+													text_field ("atr_uuid"),
+													text_field ("atr_name"),
+													text_field ("atr_value_table"),
+													boolean_field ("is_deleted"),
+													date_field ("modified_date"),
+													integer_field ("modifier_id")
 													>>), database)
 			l_modify.execute
 		end
@@ -170,15 +170,15 @@ feature {NONE} -- Implementation: EAV Build Operations
 		do
 			a_item_field_agent.call ("val_item")
 			check has_result: attached {STRING} a_item_field_agent.last_result as al_result then l_last_result := al_result end
-			create l_modify.make (modify_statement (a_table_name, <<create_table.twin, check_for_exists.twin>>,
+			create l_modify.make (modify_statement (a_table_name, <<create_table_kw, IF_NOT_EXISTS_kw_phrase>>,
 													<<
-													integer_field (value_val_id_field_name.twin) + primary_key.twin + ascending_order.twin + autoincrement.twin,
-													integer_field (attribute_atr_id_field_name.twin),
-													integer_field (instance_id_field_name.twin),
+													integer_field ("val_id") + primary_key_kw + ASC_kw + autoincrement_kw,
+													integer_field ("atr_id"),
+													integer_field ("instance_id"),
 													l_last_result.twin,
-													boolean_field (is_deleted_field_name.twin),
-													date_field (modified_date_field_name.twin),
-													integer_field (modifier_id_field_name.twin)
+													boolean_field ("is_deleted"),
+													date_field ("modified_date"),
+													integer_field ("modifier_id")
 													>>), database)
 			l_modify.execute
 		end
@@ -244,11 +244,11 @@ feature {NONE} -- Implementation: Store Operations
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 			l_sql: STRING
 		do
-			l_sql := SELECT_keyword_string.twin
+			l_sql := SELECT_kw.twin
 			l_sql.append_string_general (entity_ent_count_field_name)
-			l_sql.append_string_general (FROM_keyword_string)
+			l_sql.append_string_general (FROM_kw)
 			l_sql.append_string_general (entity_table_name)
-			l_sql.append_string_general (WHERE_keyword_string)
+			l_sql.append_string_general (WHERE_kw)
 			l_sql.append_string_general (entity_ent_name_field_name)
 			l_sql.append_string_general (" = '")
 			l_sql.append_string_general (a_entity_name)
@@ -273,17 +273,19 @@ feature {NONE} -- Implementation: Store Operations
 			l_modify: SQLITE_MODIFY_STATEMENT
 			l_sql: STRING
 		do
-			l_sql := "UPDATE "
+			l_sql := UPDATE_kw.twin
 			l_sql.append_string_general (entity_table_name)
-			l_sql.append_string_general (SET_keyword_string)
+			l_sql.append_string_general (SET_kw)
 			l_sql.append_string_general (entity_ent_count_field_name)
-			l_sql.append_string_general (" = ")
+			l_sql.append_string_general (equals)
 			l_sql.append_string_general (a_new_count.out)
-			l_sql.append_string_general (WHERE_keyword_string)
+			l_sql.append_string_general (WHERE_kw)
 			l_sql.append_string_general (entity_ent_name_field_name)
-			l_sql.append_string_general (" = '")
+			l_sql.append_string_general (equals)
+			l_sql.append_character (open_single_quote)
 			l_sql.append_string_general (a_entity_name)
-			l_sql.append_string_general ("';")
+			l_sql.append_character (close_single_quote)
+			l_sql.append_character (semi_colon)
 			create l_modify.make (l_sql, database)
 			l_modify.execute
 		end
@@ -299,8 +301,25 @@ feature -- Retrieve (fetch by ...) Operations
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
 				-- Fetch the atr_value_table for entity_id and attribute name ...
-			create l_sql.make_empty
-			l_sql := "SELECT atr_value_table, atr_id FROM Attribute WHERE ent_id = " + a_entity_id.out + " and atr_name = '" + a_setter.attribute_name + "';"
+			l_sql := SELECT_kw.twin
+			l_sql.append_string_general (attribute_atr_value_table_field_name)
+			l_sql.append_character (comma)
+			l_sql.append_string_general (attribute_atr_id_field_name)
+			l_sql.append_string_general (FROM_kw)
+			l_sql.append_string_general (attribute_table_name)
+			l_sql.append_string_general (WHERE_kw)
+			l_sql.append_string_general (entity_ent_id_field_name)
+			l_sql.append_string_general (equals)
+			l_sql.append_string_general (a_entity_id.out)
+			l_sql.append_string_general (AND_kw)
+			l_sql.append_string_general (attribute_atr_name_field_name)
+			l_sql.append_string_general (equals)
+			l_sql.append_character (open_single_quote)
+			l_sql.append_string_general (a_setter.attribute_name)
+			l_sql.append_character (close_single_quote)
+			l_sql.append_character (semi_colon)
+
+
 			create l_query.make (l_sql, database)
 			l_cursor := l_query.execute_new
 			l_cursor.start
@@ -375,11 +394,11 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 			Result := recently_found_entities.has (a_entity_name.case_insensitive_hash_code)
 			if not Result then
 				-- SELECT entity_name FROM entity WHERE entity_name = '<<a_entity_name>>';
-				l_sql := SELECT_keyword_string.twin
+				l_sql := SELECT_kw.twin
 				l_sql.append_string_general (entity_ent_name_field_name.twin)
-				l_sql.append_string_general (FROM_keyword_string.twin)
+				l_sql.append_string_general (FROM_kw.twin)
 				l_sql.append_string_general (entity_table_name.twin)
-				l_sql.append_string_general (WHERE_keyword_string.twin)
+				l_sql.append_string_general (WHERE_kw.twin)
 				l_sql.append_string_general (entity_ent_name_field_name.twin)
 				l_sql.append_string_general (equals)
 				l_sql.append_character (open_single_quote)
@@ -401,11 +420,11 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 			l_sql: STRING
 		do
-			l_sql := SELECT_keyword_string.twin
+			l_sql := SELECT_kw.twin
 			l_sql.append_string_general (entity_ent_id_field_name.twin)
-			l_sql.append_string_general (FROM_keyword_string.twin)
+			l_sql.append_string_general (FROM_kw.twin)
 			l_sql.append_string_general (entity_table_name.twin)
-			l_sql.append_string_general (WHERE_keyword_string.twin)
+			l_sql.append_string_general (WHERE_kw.twin)
 			l_sql.append_string_general (entity_ent_name_field_name.twin)
 			l_sql.append_string_general (equals)
 			l_sql.append_character (open_single_quote)
@@ -468,10 +487,10 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			l_sql: STRING
 		do
 			if a_is_new then
-				l_sql := INSERT_keyword_string.twin
-				l_sql.append_string_general (OR_keyword_string)
-				l_sql.append_string_general (REPLACE_keyword_string)
-				l_sql.append_string_general (INTO_keyword_string)
+				l_sql := INSERT_kw.twin
+				l_sql.append_string_general (OR_kw)
+				l_sql.append_string_general (REPLACE_kw)
+				l_sql.append_string_general (INTO_kw)
 				l_sql.append_string_general (a_table)
 				l_sql.append_string_general (" (atr_id, instance_id, val_item) VALUES (")
 				l_sql.append_string_general (a_attribute_id.out)
@@ -486,21 +505,21 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create l_insert.make (l_sql, database)
 				l_insert.execute
 			else
-				l_sql := UPDATE_keyword_string.twin
+				l_sql := UPDATE_kw.twin
 				l_sql.append_string_general (a_table)
-				l_sql.append_string_general (SET_keyword_string.twin)
-				l_sql.append_string_general (value_val_item_field_name.twin)
-				l_sql.append_string_general (equals.twin)
+				l_sql.append_string_general (SET_kw)
+				l_sql.append_string_general (value_val_item_field_name)
+				l_sql.append_string_general (equals)
 				l_sql.append_character (open_single_quote)
 				l_sql.append_string_general (a_value)
 				l_sql.append_character (close_single_quote)
-				l_sql.append_string_general (WHERE_keyword_string.twin)
-				l_sql.append_string_general (attribute_atr_id_field_name.twin)
-				l_sql.append_string_general (equals.twin)
+				l_sql.append_string_general (WHERE_kw)
+				l_sql.append_string_general (attribute_atr_id_field_name)
+				l_sql.append_string_general (equals)
 				l_sql.append_string_general (a_attribute_id.out)
-				l_sql.append_string_general (AND_keyword_string.twin)
-				l_sql.append_string_general (instance_id_field_name.twin)
-				l_sql.append_string_general (equals.twin)
+				l_sql.append_string_general (AND_kw)
+				l_sql.append_string_general (instance_id_field_name)
+				l_sql.append_string_general (equals)
 				l_sql.append_string_general (a_entity_id.out)
 				l_sql.append_character (semi_colon)
 
@@ -576,7 +595,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		do
 			l_sql := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals.twin
 			l_sql.append_string_general (a_name)
-			l_sql.append_string_general (close_single_quote_semi_colon.twin)
+			l_sql.append_string_general (close_single_quote_semi_colon)
 			create l_query.make (l_sql, database)
 			Result := l_query.execute_new
 		end
@@ -626,19 +645,16 @@ feature {NONE} -- Implementation: Basic Operations
 
 feature {EAV_DB_ENABLED} -- Implementation: Constants
 
-	new_instance_id_constant: INTEGER_64 = 0
-			-- `new_instance_id_constant' is how Current recognizes "new" Entity instances.
-
 	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals: STRING
 			-- Front half of `select_atr_id_from_attribute_where_atr_name_equals'.
 		once
-			Result := SELECT_keyword_string.twin
-			Result.append_string_general (attribute_atr_id_field_name.twin)
-			Result.append_string_general (FROM_keyword_string.twin)
-			Result.append_string_general (attribute_table_name.twin)
-			Result.append_string_general (WHERE_keyword_string.twin)
-			Result.append_string_general (attribute_atr_name_field_name.twin)
-			Result.append_string_general (equals.twin)
+			Result := SELECT_kw.twin
+			Result.append_string_general (attribute_atr_id_field_name)
+			Result.append_string_general (FROM_kw)
+			Result.append_string_general (attribute_table_name)
+			Result.append_string_general (WHERE_kw)
+			Result.append_string_general (attribute_atr_name_field_name)
+			Result.append_string_general (equals)
 			Result.append_character (open_single_quote)
 		end
 
@@ -650,40 +666,7 @@ feature {EAV_DB_ENABLED} -- Implementation: Constants
 			Result.append_character (semi_colon)
 		end
 
-feature {NONE} -- Implementation: Constants
-
-	ascending_order: STRING = "ASC "
-		-- `ascending_order' magic number replacement constant.
-
-	autoincrement: STRING = "AUTOINCREMENT "
-		-- `autoincrement' magic number replacement constant.
-
-	check_for_exists: STRING = "IF NOT EXISTS "
-		-- `check_for_exists' magic number replacement constant.
-
-	create_table: STRING = "CREATE TABLE "
-		-- `create_table' magic number replacement constant.
-
-	extension: STRING = "sqlite3"
-		-- `extension' magic number replacement constant.
-
-	primary_key: STRING = "PRIMARY KEY "
-		-- `primary_key' magic number replacement constant.
-
-	sqlite_blob_kw: STRING = " BLOB "
-		-- `sqlite_blob_kw' magic number replacement constant.
-
-	sqlite_integer_kw: STRING = " INTEGER "
-		-- `sqlite_integer_kw' magic number replacement constant.
-
-	sqlite_numeric_kw: STRING = " NUMERIC "
-		-- `sqlite_numeric_kw' magic number replacement constant.
-
-	sqlite_real_kw: STRING = " REAL "
-		-- `sqlite_real_kw' magic number replacement constant.
-
-	sqlite_text_kw: STRING = " TEXT "
-		-- `sqlite_text_kw' magic number replacement constant.
+feature {NONE} -- Implementation: Field constructs
 
 	date_field,
 	character_field,
@@ -691,20 +674,20 @@ feature {NONE} -- Implementation: Constants
 	text_field (a_name: STRING): STRING
 			-- Date, character, varchar, and text fields are all TEXT.
 		do
-			Result := a_name; Result.append (sqlite_text_kw)
+			Result := a_name; Result.append (TEXT_kw)
 		end
 
 	numeric_field (a_name: STRING): STRING
 			-- Numeric fields really need direct support as INTEGER, REAL, or DECIMAL.
 		do
-			Result := a_name; Result.append (sqlite_numeric_kw)
+			Result := a_name; Result.append (NUMERIC_kw)
 		end
 
 	boolean_field,
 	integer_field (a_name: STRING): STRING
 			-- Boolean and integer fields are both INTEGER.
 		do
-			Result := a_name; Result.append (sqlite_integer_kw)
+			Result := a_name; Result.append (INTEGER_kw)
 		end
 
 	float_field,
@@ -712,28 +695,14 @@ feature {NONE} -- Implementation: Constants
 	real_field (a_name: STRING): STRING
 			-- Floats and doubles are reals.
 		do
-			Result := a_name; Result.append (sqlite_real_kw)
+			Result := a_name; Result.append (REAL_kw)
 		end
 
 	blob_field (a_name: STRING): STRING
 			-- Blob fields of all sorts.
 		do
-			Result := a_name; Result.append (sqlite_blob_kw)
+			Result := a_name; Result.append (BLOB_kw)
 		end
-
-feature {NONE} -- Implementation: Value Table Names
-
-	blob_value_table_name: STRING = "Value_blob"
-	boolean_value_table_name: STRING = "Value_boolean"
-	character_value_table_name: STRING = "Value_character"
-	date_value_table_name: STRING = "Value_date"
-	double_value_table_name: STRING = "Value_double"
-	float_value_table_name: STRING = "Value_float"
-	integer_value_table_name: STRING = "Value_integer"
-	number_value_table_name: STRING = "Value_numeric"
-	real_value_table_name: STRING = "Value_real"
-	text_value_table_name: STRING = "Value_text"
-	varchar_value_table_name: STRING = "Value_varchar"
 
 feature {EAV_SYSTEM, EAV_DATA_MANAGER} -- Implementation: Access
 
