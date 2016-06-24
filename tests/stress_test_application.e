@@ -24,7 +24,7 @@ feature {NONE} -- Initialization
 			-- `make' Current.
 		local
 			l_system: EAV_SYSTEM
-			l_manager: EAV_DATA_MANAGER [MOCK_OBJECT]
+			l_manager: EAV_DATA_MANAGER
 			l_mock: MOCK_OBJECT
 			l_start,
 			l_end: DATE_TIME

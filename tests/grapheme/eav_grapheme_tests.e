@@ -59,7 +59,62 @@ feature -- Generic Testing
 			assert_integers_equal ("x_count", l_count, l_list.count)
 		end
 
-	general_testing
+	grapheme_uniqueness_test
+			-- `grapheme_uniqueness_test' testing uniqueness of twos, threes, and fours.
+		local
+			l_graph: EAV_GRAPHEME
+			l_grapheme_1,
+			l_grapheme_2: STRING
+		do
+			create l_graph
+
+			l_graph.grapheme_twos.do_nothing
+			assert_integers_equal ("twos_count", 80, l_graph.grapheme_twos.count)
+			l_graph.grapheme_twos_hash_codes.do_nothing
+			assert_integers_equal ("twos_hash_count", 80, l_graph.grapheme_twos_hash_codes.count)
+				-- Ensure that the lists match precisely!
+			across
+				l_graph.grapheme_twos as ic
+			loop
+				assert_32 ("twos_grapheme", l_graph.grapheme_twos_hash_codes.has_key (ic.item))
+				l_grapheme_1 := ic.item
+				check attached l_graph.grapheme_twos.at (l_graph.grapheme_twos_hash_codes.at (l_grapheme_1)) as al_grapheme_2 then
+					assert_strings_equal ("same_graphemes", l_grapheme_1, al_grapheme_2)
+				end
+			end
+
+			l_graph.grapheme_threes.do_nothing
+			assert_integers_equal ("threes_count", 26, l_graph.grapheme_threes.count)
+			l_graph.grapheme_threes_hash_codes.do_nothing
+			assert_integers_equal ("threes_hash_count", 26, l_graph.grapheme_threes_hash_codes.count)
+				-- Ensure that the lists match precisely!
+			across
+				l_graph.grapheme_threes as ic
+			loop
+				assert_32 ("threes_grapheme", l_graph.grapheme_threes_hash_codes.has_key (ic.item))
+				l_grapheme_1 := ic.item
+				check attached l_graph.grapheme_threes.at (l_graph.grapheme_threes_hash_codes.at (l_grapheme_1)) as al_grapheme_2 then
+					assert_strings_equal ("same_graphemes", l_grapheme_1, al_grapheme_2)
+				end
+			end
+
+			l_graph.grapheme_fours.do_nothing
+			assert_integers_equal ("fours_count", 5, l_graph.grapheme_fours.count)
+			l_graph.grapheme_fours_hash_codes.do_nothing
+			assert_integers_equal ("fours_hash_count", 5, l_graph.grapheme_fours_hash_codes.count)
+				-- Ensure that the lists match precisely!
+			across
+				l_graph.grapheme_fours as ic
+			loop
+				assert_32 ("threes_grapheme", l_graph.grapheme_fours_hash_codes.has_key (ic.item))
+				l_grapheme_1 := ic.item
+				check attached l_graph.grapheme_fours.at (l_graph.grapheme_fours_hash_codes.at (l_grapheme_1)) as al_grapheme_2 then
+					assert_strings_equal ("same_graphemes", l_grapheme_1, al_grapheme_2)
+				end
+			end
+		end
+
+	primes_testing
 			-- `general_testing' proving that we have Prime numbers.
 		local
 			l_graph: EAV_GRAPHEME
