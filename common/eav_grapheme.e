@@ -8,8 +8,8 @@ class
 
 feature -- Basic Operations
 
-	convert_to_hash (a_identifier: STRING): ARRAYED_LIST [INTEGER]
-			-- `convert_to_hash' `a_identifier' to hash-code as {INTEGER_64}.
+	convert_to_hash (a_identifier: STRING): ARRAYED_LIST [INTEGER_32]
+			-- `convert_to_hash' `a_identifier' to hash-code as {INTEGER_32}.
 		local
 			i,j: INTEGER
 			l_found: BOOLEAN
@@ -69,7 +69,7 @@ feature -- Basic Operations
 
 feature -- Constants
 
-	phoneme_list: HASH_TABLE [STRING, INTEGER]
+	phoneme_list: HASH_TABLE [STRING, INTEGER_32]
 			-- Phonemes of various forms.
 		note
 			EIS: "src=file:$(USERPROFILE)\Documents\GitHub\eav\docs\table_of_phonemes.pdf", "protocol=PDF"
@@ -77,9 +77,17 @@ feature -- Constants
 			create Result.make (44)
 		end
 
-	grapheme_twos_hash_codes: HASH_TABLE [INTEGER, STRING]
+	graphemes: HASH_TABLE [INTEGER_32, STRING]
+		once
+			create Result.make (111)
+			across grapheme_fours as ic loop Result.force (ic.key, ic.item) end
+			across grapheme_threes as ic loop Result.force (ic.key, ic.item) end
+			across grapheme_twos as ic loop Result.force (ic.key, ic.item) end
+		end
+
+	grapheme_twos_hash_codes: HASH_TABLE [INTEGER_32, STRING]
 			-- `grapheme_twos_hash_codes' lookup hash-code by grapheme text.
-		do
+		once
 			create Result.make (80)
 			Result.force (("ae").hash_code, "ae")
 			Result.force (("ai").hash_code, "ai")
@@ -164,9 +172,9 @@ feature -- Constants
 			Result.force (("zz").hash_code, "zz")
 		end
 
-	grapheme_twos: HASH_TABLE [STRING, INTEGER]
+	grapheme_twos: HASH_TABLE [STRING, INTEGER_32]
 			-- Graphemes with two letters.
-		do
+		once
 			create Result.make (80)
 			Result.force ("ae", ("ae").hash_code)
 			Result.force ("ai", ("ai").hash_code)
@@ -250,9 +258,9 @@ feature -- Constants
 			Result.force ("zz", ("zz").hash_code)
 		end
 
-	grapheme_threes_hash_codes: HASH_TABLE [INTEGER, STRING]
+	grapheme_threes_hash_codes: HASH_TABLE [INTEGER_32, STRING]
 			-- `grapheme_threes_hash_codes' for looking up hash-codes by grapheme.
-		do
+		once
 			create Result.make (26)
 			Result.force (("air").hash_code, "air")
 			Result.force (("alt").hash_code, "alt")
@@ -282,9 +290,9 @@ feature -- Constants
 			Result.force (("wor").hash_code, "wor")
 		end
 
-	grapheme_threes: HASH_TABLE [STRING, INTEGER]
+	grapheme_threes: HASH_TABLE [STRING, INTEGER_32]
 			-- Graphemes with three letters.
-		do
+		once
 			create Result.make (26)
 			Result.force ("air", ("air").hash_code)
 			Result.force ("alt", ("alt").hash_code)
@@ -314,9 +322,9 @@ feature -- Constants
 			Result.force ("wor", ("wor").hash_code)
 		end
 
-	grapheme_fours_hash_codes: HASH_TABLE [INTEGER, STRING]
+	grapheme_fours_hash_codes: HASH_TABLE [INTEGER_32, STRING]
 			-- `grapheme_fours_hash_codes' for looking up hash-codes by grapheme.
-		do
+		once
 			create Result.make (5)
 			Result.force (("augh").hash_code, "augh")
 			Result.force (("eigh").hash_code, "eigh")
@@ -325,9 +333,9 @@ feature -- Constants
 			Result.force (("ture").hash_code, "ture")
 		end
 
-	grapheme_fours: HASH_TABLE [STRING, INTEGER]
+	grapheme_fours: HASH_TABLE [STRING, INTEGER_32]
 			-- Graphemes with four letters.
-		do
+		once
 			create Result.make (5)
 			Result.force ("augh", ("augh").hash_code)
 			Result.force ("eigh", ("eigh").hash_code)

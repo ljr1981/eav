@@ -63,7 +63,7 @@ feature -- Generic Testing
 			-- `grapheme_conversion_tests' determines if grapheme-based hashing works as-billed!
 		local
 			l_graph: EAV_GRAPHEME
-			l_result: ARRAYED_LIST [INTEGER]
+			l_result: ARRAYED_LIST [INTEGER_32]
 		do
 			create l_graph
 
@@ -122,6 +122,10 @@ feature -- Generic Testing
 			assert_integers_equal ("c_99", 99, l_result [1])
 			assert_integers_equal ("a_97", 97, l_result [2])
 			assert_integers_equal ("t_116", 116, l_result [3])
+
+			l_result := l_graph.convert_to_hash ("Pneumonoultramicroscopicsilicovolcanoconiosis")
+			assert_integers_equal ("longest_word_count", 39, l_result.count)
+			assert_integers_equal ("string_hash", 1320010867, ("Pneumonoultramicroscopicsilicovolcanoconiosis").hash_code)
 		end
 
 	grapheme_uniqueness_test
