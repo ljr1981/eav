@@ -8,17 +8,32 @@ class
 
 feature -- Constants
 
-	SELECT_keyword_string: STRING = " SELECT "
-	FROM_keyword_string: STRING = " FROM "
-	SET_keyword_string: STRING = " SET "
-	WHERE_keyword_string: STRING = " WHERE "
-	INSERT_keyword_string: STRING = " INSERT "
-	UPDATE_keyword_string: STRING = " UPDATE "
-	INTO_keyword_string: STRING = " INTO "
-	VALUES_keyword_string: STRING = " VALUES "
-	OR_keyword_string: STRING = " OR "
-	REPLACE_keyword_string: STRING = " REPLACE "
-	AND_keyword_string: STRING = " AND "
+	new_instance_id_constant: INTEGER_64 = 0
+			-- `new_instance_id_constant' is how Current recognizes "new" Entity instances.
+
+	AND_kw: STRING = " AND "
+	ASC_kw: STRING = " ASC "
+	AUTOINCREMENT_kw: STRING = " AUTOINCREMENT "
+	BLOB_kw: STRING = " BLOB "
+	CREATE_TABLE_kw: STRING = " CREATE TABLE "
+	FROM_kw: STRING = " FROM "
+	IF_NOT_EXISTS_kw_phrase: STRING = " IF NOT EXISTS "
+	INSERT_kw: STRING = " INSERT "
+	INTEGER_kw: STRING = " INTEGER "
+	INTO_kw: STRING = " INTO "
+	NUMERIC_kw: STRING = " NUMERIC "
+	OR_kw: STRING = " OR "
+	PRIMARY_KEY_kw: STRING = " PRIMARY KEY "
+	REAL_kw: STRING = " REAL "
+	REPLACE_kw: STRING = " REPLACE "
+	SELECT_kw: STRING = " SELECT "
+	SET_kw: STRING = " SET "
+	TEXT_kw: STRING = " TEXT "
+	UPDATE_kw: STRING = " UPDATE "
+	VALUES_kw: STRING = " VALUES "
+	WHERE_kw: STRING = " WHERE "
+
+	extension: STRING = "sqlite3"
 
 	open_parenthesis: CHARACTER = '('
 	close_parenthesis: CHARACTER = ')'
@@ -51,6 +66,17 @@ feature -- Constants
 	modified_date_field_name: STRING = "modified_date"
 	modifier_id_field_name: STRING = "modifier_id"
 
+	blob_value_table_name: STRING = "Value_blob"
+	boolean_value_table_name: STRING = "Value_boolean"
+	character_value_table_name: STRING = "Value_character"
+	date_value_table_name: STRING = "Value_date"
+	double_value_table_name: STRING = "Value_double"
+	float_value_table_name: STRING = "Value_float"
+	integer_value_table_name: STRING = "Value_integer"
+	number_value_table_name: STRING = "Value_numeric"
+	real_value_table_name: STRING = "Value_real"
+	text_value_table_name: STRING = "Value_text"
+	varchar_value_table_name: STRING = "Value_varchar"
 
 note
 	design_intent: "[

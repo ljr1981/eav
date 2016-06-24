@@ -6,6 +6,9 @@ note
 class
 	EAV_DATA_MANAGER
 
+inherit
+	EAV_CONSTANTS
+
 feature -- Basic Operations
 
 	fetch_objects_by_ids (a_objects: ARRAY [TUPLE [object: EAV_DB_ENABLED; id: INTEGER_64]])
@@ -51,18 +54,42 @@ feature -- Basic Operations
 		end
 
 	entity_id (a_object: EAV_DB_ENABLED): INTEGER_64
-			-- ??
+			-- `entity_id' for `a_object'.
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_sql: STRING
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			l_sql := "SELECT ent_id FROM Entity WHERE ent_name = '" + a_object.computed_entity_name + "';"
-			create l_query.make (l_sql, database.database)
-			l_cursor := l_query.execute_new
-			l_cursor.start
-			check has_result: not l_cursor.after end
-			check attached {INTEGER_64} l_cursor.item.value (ent_id_column_number) as al_result then Result := al_result end
+			if attached {INTEGER_64} previously_fetched_entity_ids.has (a_object.computed_entity_name.hash_code) as al_entity_id then
+				Result := al_entity_id
+			else
+				l_sql := SELECT_kw.twin
+				l_sql.append_string_general (entity_ent_id_field_name)
+				l_sql.append_string_general (FROM_kw)
+				l_sql.append_string_general (entity_table_name)
+				l_sql.append_string_general (WHERE_kw)
+				l_sql.append_string_general (entity_ent_name_field_name)
+				l_sql.append_string_general (equals)
+				l_sql.append_character (open_single_quote)
+				l_sql.append_string_general (a_object.computed_entity_name)
+				l_sql.append_character (close_single_quote)
+				l_sql.append_character (semi_colon)
+
+				create l_query.make (l_sql, database.database)
+				l_cursor := l_query.execute_new
+				l_cursor.start
+				check has_result: not l_cursor.after end
+				check attached {INTEGER_64} l_cursor.item.value (ent_id_column_number) as al_result then
+					Result := al_result
+					previously_fetched_entity_ids.force (Result, a_object.computed_entity_name.hash_code)
+				end
+			end
+		end
+
+	previously_fetched_entity_ids: HASH_TABLE [INTEGER_64, INTEGER]
+			-- `previously_fetched_entity_ids'.
+		attribute
+			create Result.make (100)
 		end
 
 	ent_id_column_number: NATURAL_32 = 1
