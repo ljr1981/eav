@@ -32,27 +32,6 @@ inherit
 
 feature -- Creation Tests
 
-	creation_tests
-			-- `creation_tests'.
-		note
-			testing:
-				"execution/isolated",
-				"execution/serial"
-		local
-			l_entity: EAV_ENTITY
-			l_attribute: EAV_ATTRIBUTE
-		do
-			create l_entity
-			l_entity.set_name ("entity")
-			assert_attached ("l_entity", l_entity)
-			remove_data
-
-			create l_attribute
-			l_attribute.set_name ("attribute")
-			assert_attached ("l_attribute", l_attribute)
-			remove_data
-		end
-
 	eav_system_tests
 			-- `eav_system_tests'
 		note
