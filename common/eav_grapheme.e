@@ -8,12 +8,63 @@ class
 
 feature -- Basic Operations
 
-	convert_to_hash (a_identifier: STRING): INTEGER_64
+	convert_to_hash (a_identifier: STRING): ARRAYED_LIST [INTEGER]
 			-- `convert_to_hash' `a_identifier' to hash-code as {INTEGER_64}.
+		local
+			i,j: INTEGER
+			l_found: BOOLEAN
 		do
-				-- 4-letter
-				-- 3-letter
-				-- 2-letter
+			create Result.make (5)
+			inspect
+				a_identifier.count
+			when 1 then
+				Result.force (a_identifier.hash_code)
+			when 2 then
+				Result.force (grapheme_twos_hash_codes.at (a_identifier))
+			else
+				from
+					i := 1
+				until
+					(i > a_identifier.count)
+				loop
+					from
+						if (a_identifier.count - i) >= 4  then
+							j := 4
+						else
+							j := a_identifier.count - i + 1
+						end
+						l_found := False
+					until
+						(j < 0) or l_found
+					loop
+						inspect
+							j
+						when 4 then
+							if attached grapheme_fours_hash_codes.at (a_identifier.substring (i, i + j - 1)) as al_code and then al_code > 0 then
+								Result.force (al_code)
+								l_found := True
+							end
+						when 3 then
+							if attached grapheme_threes_hash_codes.at (a_identifier.substring (i, i + j - 1)) as al_code and then al_code > 0 then
+								Result.force (al_code)
+								l_found := True
+							end
+						when 2 then
+							if attached grapheme_twos_hash_codes.at (a_identifier.substring (i, i + j - 1)) as al_code and then al_code > 0 then
+								Result.force (al_code)
+								l_found := True
+							end
+						when 1 then
+							Result.force (a_identifier.substring (i, i).hash_code)
+							l_found := True
+						else
+							check too_small: False end
+						end
+						j := j - 1
+					end
+					i := i + j + 1
+				end
+			end
 		end
 
 feature -- Constants

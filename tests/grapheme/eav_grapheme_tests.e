@@ -59,6 +59,71 @@ feature -- Generic Testing
 			assert_integers_equal ("x_count", l_count, l_list.count)
 		end
 
+	grapheme_conversion_tests
+			-- `grapheme_conversion_tests' determines if grapheme-based hashing works as-billed!
+		local
+			l_graph: EAV_GRAPHEME
+			l_result: ARRAYED_LIST [INTEGER]
+		do
+			create l_graph
+
+			l_result := l_graph.convert_to_hash ("caughaoiairt")
+			assert_integers_equal ("aughoiair_count", 6, l_result.count)
+			assert_integers_equal ("caughaoiairt_99", 99, l_result [1])					-- c
+			assert_integers_equal ("caughaoiairt_1635084136", 1635084136, l_result [2])	-- augh
+			assert_integers_equal ("caughaoiairt_97", 97, l_result [3])					-- a
+			assert_integers_equal ("caughaoiairt_28521", 28521, l_result [4])			-- oi
+			assert_integers_equal ("caughaoiairt_6383986", 6383986, l_result [5])		-- air
+			assert_integers_equal ("caughaoiairt_116", 116, l_result [6])				-- t
+
+			l_result := l_graph.convert_to_hash ("aughoiair")
+			assert_integers_equal ("aughoiair_count", 3, l_result.count)
+			assert_integers_equal ("aughoiair_1635084136", 1635084136, l_result [1])
+			assert_integers_equal ("aughoiair_28521", 28521, l_result [2])
+			assert_integers_equal ("aughoiair_6383986", 6383986, l_result [3])
+
+			l_result := l_graph.convert_to_hash ("augh")
+			assert_integers_equal ("augh_count", 1, l_result.count)
+			assert_integers_equal ("augh_1635084136", 1635084136, l_result [1])
+
+			l_result := l_graph.convert_to_hash ("eigh")
+			assert_integers_equal ("eigh_count", 1, l_result.count)
+			assert_integers_equal ("eigh_1701406568", 1701406568, l_result [1])
+
+			l_result := l_graph.convert_to_hash ("eighaugh")
+			assert_integers_equal ("eighaugh_count", 2, l_result.count)
+			assert_integers_equal ("eighaugh_1701406568", 1701406568, l_result [1])
+			assert_integers_equal ("eighaugh_1635084136", 1635084136, l_result [2])
+
+			l_result := l_graph.convert_to_hash ("air")
+			assert_integers_equal ("air_count", 1, l_result.count)
+			assert_integers_equal ("air_6383986", 6383986, l_result [1])
+
+			l_result := l_graph.convert_to_hash ("airear")
+			assert_integers_equal ("airear_count", 2, l_result.count)
+			assert_integers_equal ("airear_6383986", 6383986, l_result [1])
+			assert_integers_equal ("airear_6644082", 6644082, l_result [2])
+
+			l_result := l_graph.convert_to_hash ("oi")
+			assert_integers_equal ("oi_count", 1, l_result.count)
+			assert_integers_equal ("oi_28521", 28521, l_result [1])
+
+			l_result := l_graph.convert_to_hash ("rh")
+			assert_integers_equal ("rh_count", 1, l_result.count)
+			assert_integers_equal ("rh_29288", 29288, l_result [1])
+
+			l_result := l_graph.convert_to_hash ("rhoi")
+			assert_integers_equal ("rhoi_count", 2, l_result.count)
+			assert_integers_equal ("rhoi_29288", 29288, l_result [1])
+			assert_integers_equal ("rhoi_28521", 28521, l_result [2])
+
+			l_result := l_graph.convert_to_hash ("cat")
+			assert_integers_equal ("cat_count", 3, l_result.count)
+			assert_integers_equal ("c_99", 99, l_result [1])
+			assert_integers_equal ("a_97", 97, l_result [2])
+			assert_integers_equal ("t_116", 116, l_result [3])
+		end
+
 	grapheme_uniqueness_test
 			-- `grapheme_uniqueness_test' testing uniqueness of twos, threes, and fours.
 		local
