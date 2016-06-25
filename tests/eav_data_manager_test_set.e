@@ -51,10 +51,10 @@ feature -- Test routines
 			l_mock.set_first_name_dbe ("Foghorn")
 			l_mock.set_last_name_dbe ("Leghorn")
 			l_mock.set_age_dbe (35)
-			l_mock.store_in_database (l_mock, l_system.first_database)
+			l_mock.store_in_database (l_mock, l_system.database_n (1))
 
 			create l_manager
-			l_manager.set_database (l_system.first_database)
+			l_manager.set_database (l_system.database_n (1))
 			create l_mock.make_with_reasonable_defaults
 			assert_strings_equal ("empty_first_name", "", l_mock.first_name_dbe)
 			l_manager.fetch_by_id (l_mock, 1)

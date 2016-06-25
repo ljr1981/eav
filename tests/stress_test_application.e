@@ -41,7 +41,7 @@ feature {NONE} -- Initialization
 			across
 				l_mocks as ic_mocks
 			loop
-				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
+				ic_mocks.item.store_in_database (ic_mocks.item, l_system.database_n (1))
 			end
 			create l_end.make_now
 			l_file.put_string ("10x%N")
@@ -55,7 +55,7 @@ feature {NONE} -- Initialization
 			across
 				l_mocks as ic_mocks
 			loop
-				ic_mocks.item.store_in_database (ic_mocks.item, l_system.first_database)
+				ic_mocks.item.store_in_database (ic_mocks.item, l_system.database_n (1))
 			end
 			create l_end.make_now
 			l_file.put_string ("712x%N")

@@ -345,10 +345,16 @@ feature -- Retrieve (fetch by ...) Operations
 			end
 		end
 
-			-- fetch_by_primary_key --> object
-			-- fetch_by_candidate_key --> object
-			-- fetch_by_filtered_key --> collection
-			-- fetch_by_adhoc_query --> collection
+			-- fetch_by_primary_key		--> Single "thing"
+			-- fetch_by_candidate_key	--> Single "thing"
+			-- fetch_by_filtered_key	--> Collection of "things"
+			-- fetch_by_adhoc_query		--> Collection of "things"
+
+			-- QUESTION: Fetch what "thing"? What is returned?
+				-- fetch ID or ID-list
+				-- fetch Field or Field-list (a single field per object for 0:1:M objects)
+				-- fetch Fields or Fields-list (a list of fields per object for 0:1:M objects) (some or all fields)
+				-- fetch Computed Field/Fields as a list of agents applied to ...
 
 feature {TEST_SET_BRIDGE} -- Implementation: Entity
 

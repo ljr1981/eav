@@ -113,7 +113,7 @@ feature -- Storable Tests
 			l_mock.set_first_name_dbe ("Bugs")
 			l_mock.set_last_name_dbe ("Bunny")
 			l_mock.set_age_dbe (74)
-			l_mock.store_in_database (l_mock, l_system.first_database)
+			l_mock.store_in_database (l_mock, l_system.database_n (1))
 
 				-- Clean-up and housekeeping ...
 			l_system.close_all
@@ -139,14 +139,14 @@ feature -- Storable Tests
 			l_bugs.set_first_name_dbe ("Bugs")
 			l_bugs.set_last_name_dbe ("Bunny")
 			l_bugs.set_age_dbe (74)
-			l_bugs.store_in_database (l_bugs, l_system.first_database)
+			l_bugs.store_in_database (l_bugs, l_system.database_n (1))
 
 				-- Now do Elmer ...
 			create l_elmer.make_with_reasonable_defaults
 			l_elmer.set_first_name_dbe ("Elmer")
 			l_elmer.set_last_name_dbe ("Fudd")
 			l_elmer.set_age_dbe (73)
-			l_elmer.store_in_database (l_elmer, l_system.first_database)
+			l_elmer.store_in_database (l_elmer, l_system.database_n (1))
 
 				-- Cleanup
 			l_system.close_all
@@ -171,12 +171,12 @@ feature -- Storable Tests
 			l_mock.set_first_name_dbe ("Bugs")
 			l_mock.set_last_name_dbe ("Bunny")
 			l_mock.set_age_dbe (74)
-			l_mock.store_in_database (l_mock, l_system.first_database)
+			l_mock.store_in_database (l_mock, l_system.database_n (1))
 
 				-- Give us a change and ensure the same object is changed
 				-- and not a new object created with the changed data.
 			l_mock.set_age_dbe (29)
-			l_mock.store_in_database (l_mock, l_system.first_database)
+			l_mock.store_in_database (l_mock, l_system.database_n (1))
 
 				-- Clean-up and housekeeping ...
 			l_system.close_all

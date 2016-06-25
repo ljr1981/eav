@@ -56,14 +56,6 @@ feature {NONE} -- Initialization
 
 feature -- Queries
 
-	first_database: EAV_DATABASE
-			-- `first_database'
-		once ("object")
-			check has_content: not databases.is_empty and then attached databases.at (1) as al_database then
-				Result := al_database.db
-			end
-		end
-
 	database_n (i: INTEGER): EAV_DATABASE
 			-- `database_n' on `i'.
 		require
