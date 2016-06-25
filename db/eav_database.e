@@ -493,45 +493,91 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			l_sql: STRING
 		do
 			if a_is_new then
-				l_sql := INSERT_kw.twin
-				l_sql.append_string_general (OR_kw)
-				l_sql.append_string_general (REPLACE_kw)
-				l_sql.append_string_general (INTO_kw)
+				l_sql := store_with_insert_1.twin
 				l_sql.append_string_general (a_table)
-				l_sql.append_string_general (" (atr_id, instance_id, val_item) VALUES (")
+				l_sql.append_string_general (store_with_insert_2)
 				l_sql.append_string_general (a_attribute_id.out)
 				l_sql.append_character (comma)
 				l_sql.append_string_general (a_entity_id.out)
-				l_sql.append_character (comma)
-				l_sql.append_character (open_single_quote)
+				l_sql.append_string_general (store_with_insert_3)
 				l_sql.append_string_general (a_value)
-				l_sql.append_character (close_single_quote)
-				l_sql.append_character (close_parenthesis)
-				l_sql.append_character (semi_colon)
+				l_sql.append_string_general (store_with_insert_4)
 				create l_insert.make (l_sql, database)
 				l_insert.execute
 			else
 				l_sql := UPDATE_kw.twin
 				l_sql.append_string_general (a_table)
-				l_sql.append_string_general (SET_kw)
-				l_sql.append_string_general (value_val_item_field_name)
-				l_sql.append_string_general (equals)
-				l_sql.append_character (open_single_quote)
+				l_sql.append_string_general (store_with_modify_1)
 				l_sql.append_string_general (a_value)
-				l_sql.append_character (close_single_quote)
-				l_sql.append_string_general (WHERE_kw)
-				l_sql.append_string_general (attribute_atr_id_field_name)
-				l_sql.append_string_general (equals)
+				l_sql.append_string_general (store_with_modify_2)
 				l_sql.append_string_general (a_attribute_id.out)
-				l_sql.append_string_general (AND_kw)
-				l_sql.append_string_general (instance_id_field_name)
-				l_sql.append_string_general (equals)
+				l_sql.append_string_general (store_with_modify_3)
 				l_sql.append_string_general (a_entity_id.out)
 				l_sql.append_character (semi_colon)
 
 				create l_modify.make (l_sql, database)
 				l_modify.execute
 			end
+		end
+
+	store_with_insert_1: STRING
+		once
+			Result := INSERT_kw.twin
+			Result.append_string_general (OR_kw)
+			Result.append_string_general (REPLACE_kw)
+			Result.append_string_general (INTO_kw)
+		end
+
+	store_with_insert_2: STRING
+		once
+			Result := space.out.twin
+			Result.append_character (open_parenthesis)
+			Result.append_string_general (attribute_atr_id_field_name.twin)
+			Result.append_character (comma)
+			Result.append_string_general (instance_id_field_name)
+			Result.append_character (comma)
+			Result.append_string_general (value_val_item_field_name)
+			Result.append_character (close_parenthesis)
+			Result.append_character (space)
+			Result.append_string_general (VALUES_kw)
+			Result.append_character (space)
+			Result.append_character (open_parenthesis)
+		end
+
+	store_with_insert_3: STRING
+		once
+			Result := comma.out.twin
+			Result.append_character (open_single_quote)
+		end
+
+	store_with_insert_4: STRING
+		once
+			Result := close_single_quote.out.twin
+			Result.append_character (close_parenthesis)
+			Result.append_character (semi_colon)
+		end
+
+	store_with_modify_1: STRING
+		once
+			Result := SET_kw.twin
+			Result.append_string_general (value_val_item_field_name)
+			Result.append_string_general (equals)
+			Result.append_character (open_single_quote)
+		end
+
+	store_with_modify_2: STRING
+		once
+			Result := close_single_quote.out.twin
+			Result.append_string_general (WHERE_kw)
+			Result.append_string_general (attribute_atr_id_field_name)
+			Result.append_string_general (equals)
+		end
+
+	store_with_modify_3: STRING
+		once
+			Result := AND_kw.twin
+			Result.append_string_general (instance_id_field_name)
+			Result.append_string_general (equals)
 		end
 
 	store_attribute_name (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
