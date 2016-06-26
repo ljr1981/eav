@@ -22,6 +22,8 @@ feature {NONE} -- Initialization
 			-- `make_empty' in reasonable default state.
 		do
 			create database.make_open_read_write ("system")
+			set_pragma_status_off
+			set_pragma_journal_mode_memory
 		end
 
 	make (a_location, a_file_name: READABLE_STRING_GENERAL)
@@ -41,6 +43,8 @@ feature {NONE} -- Initialization
 			l_full_path.append (extension)
 			create last_database_path.make_from_string (l_full_path)
 			create database.make_create_read_write (last_database_path.name)
+			set_pragma_status_off
+			set_pragma_journal_mode_memory
 		end
 
 	last_database_path: PATH
@@ -76,6 +80,22 @@ feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 		end
 
 feature {NONE} -- Implementation: EAV Build Operations
+
+	set_pragma_status_off
+		local
+			l_modify: SQLITE_MODIFY_STATEMENT
+		do
+			create l_modify.make ("PRAGMA synchronous = OFF;", database)
+			l_modify.execute
+		end
+
+	set_pragma_journal_mode_memory
+		local
+			l_modify: SQLITE_MODIFY_STATEMENT
+		do
+			create l_modify.make ("PRAGMA journal_mode = MEMORY;", database)
+			l_modify.execute
+		end
 
 	build_entity
 			-- `build_entity' table (if needed).
@@ -349,6 +369,7 @@ feature -- Retrieve (fetch by ...) Operations
 			-- fetch_by_candidate_key	--> Single "thing"
 			-- fetch_by_filtered_key	--> Collection of "things"
 			-- fetch_by_adhoc_query		--> Collection of "things"
+				-- f(n) =|/=|<|>|=<|>=|etc.
 
 			-- QUESTION: Fetch what "thing"? What is returned?
 				-- fetch ID or ID-list

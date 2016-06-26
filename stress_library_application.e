@@ -33,8 +33,8 @@ feature {NONE} -- Initialization
 			create l_system.make ("system", test_data_path)
 			create l_file.make_create_read_write ("stress_test_results.txt")
 
-				-- 10_000 x test of 3x dbe features ...
-			l_mocks := fresh_mocks (10_000)
+				-- 100_000 x test of 3x dbe features ...
+			l_mocks := fresh_mocks (100_000)
 			create l_start.make_now
 			print ("%N" + l_start.out + "%N")
 
@@ -43,7 +43,7 @@ feature {NONE} -- Initialization
 			create l_end.make_now
 			print (l_end.out + "%N")
 
-			l_file.put_string ("10_000x%N")
+			l_file.put_string ("100_000x%N")
 			l_file.put_string ("start: " + l_start.fine_second.out + "%N")
 			l_file.put_string ("end:   " + l_end.fine_second.out + "%N")
 			l_file.put_string ("total: " + (l_end.fine_second - l_start.fine_second).out + "%N")

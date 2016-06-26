@@ -35,7 +35,7 @@
 	</target>
 	<target name="test" extends="eav">
 		<description>eav Tests</description>
-		<root class="STRESS_TEST_APPLICATION" feature="make"/>
+		<root class="STRESS_LIBRARY_APPLICATION" feature="make"/>
 		<file_rule>
 			<exclude>/.git$</exclude>
 			<exclude>/.svn$</exclude>
