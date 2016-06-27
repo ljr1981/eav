@@ -57,7 +57,7 @@ feature -- Test routines
 			l_manager.set_database (l_system.database_n (1))
 			create l_mock.make_with_reasonable_defaults
 			assert_strings_equal ("empty_first_name", "", l_mock.first_name_dbe)
-			l_manager.fetch_by_id (l_mock, 1)
+			l_manager.fetch_by_id (l_mock, 1, l_manager.entity_id (l_mock))
 			assert_strings_equal ("first_name", "Foghorn", l_mock.first_name_dbe)
 			assert_strings_equal ("last_name", "Leghorn", l_mock.last_name_dbe)
 			assert_integers_equal ("age", 35, l_mock.age_dbe)

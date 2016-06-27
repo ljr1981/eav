@@ -53,6 +53,20 @@ feature {NONE} -- Initialization
 			create Result.make_current
 		end
 
+feature {EAV_DB_ENABLED} -- Access: Database Info
+
+	entities: HASH_TABLE [TUPLE [ent_id: INTEGER_64], STRING]
+			-- `entities' in memory; sync'd with DB.
+		attribute
+			create Result.make (100)
+		end
+
+	attributes: HASH_TABLE [TUPLE [atr_id, ent_id: INTEGER_64; value_table_name: STRING], INTEGER_32]
+			-- `attributes' in memory; sync'd with DB.
+		attribute
+			create Result.make (1_000)
+		end
+
 feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 
 	build_eav_structure
@@ -66,15 +80,10 @@ feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 			build_attribute
 
 				-- Build Value tables ...
-			build_date_value
-			build_character_value
-			build_varchar_value
+			--build_date_value
 			build_text_value
-			build_numeric_value
 			build_boolean_value
 			build_integer_value
-			build_float_value
-			build_double_value
 			build_real_value
 			build_blob_value
 		end
@@ -137,25 +146,9 @@ feature {NONE} -- Implementation: EAV Build Operations
 			l_modify.execute
 		end
 
-	build_date_value
-			-- `build_date_value'.
-		do build_value (date_value_table_name, agent date_field) end
-
-	build_character_value
-			-- `build_character_value'.
-		do build_value (character_value_table_name.twin, agent character_field) end
-
-	build_varchar_value
-			-- `build_varchar_value'.
-		do build_value (varchar_value_table_name.twin, agent varchar_field) end
-
 	build_text_value
 			-- `build_text_value'
 		do build_value (text_value_table_name.twin, agent text_field) end
-
-	build_numeric_value
-			-- `build_numeric_value'.
-		do build_value (number_value_table_name.twin, agent numeric_field) end
 
 	build_boolean_value
 			-- `build_boolean_value'.
@@ -165,21 +158,13 @@ feature {NONE} -- Implementation: EAV Build Operations
 			-- `build_integer_value'.
 		do build_value (integer_value_table_name.twin, agent integer_field) end
 
-	build_float_value
-			-- `build_float_value'.
-		do build_value (float_value_table_name.twin, agent float_field) end
-
-	build_double_value
-			-- `build_double_value'.
-		do build_value (double_value_table_name.twin, agent double_field) end
-
 	build_real_value
 			-- `build_real_value'.
 		do build_value (real_value_table_name.twin, agent real_field) end
 
 	build_blob_value
 			-- `build_blob_value'.
-		do build_value (blob_value_table_name.twin, agent blob_field) end
+		do build_value (Blob_value_table_name.twin, agent blob_field) end
 
 	build_value (a_table_name: STRING; a_item_field_agent: FUNCTION [TUPLE [STRING], STRING])
 			-- `build_varchar_value' table (if needed).
@@ -312,7 +297,7 @@ feature {NONE} -- Implementation: Store Operations
 
 feature -- Retrieve (fetch by ...) Operations
 
-	fetch_by_instance_id (a_entity_id: INTEGER_64; a_setter: TUPLE [setter_agent: PROCEDURE [detachable ANY]; attribute_name: STRING]; a_instance_id: INTEGER_64)
+	fetch_by_instance_id (a_entity_id: INTEGER_64; a_setter: TUPLE [setter_agent: PROCEDURE [detachable ANY]; attribute_name: STRING; setter_type_code: INTEGER]; a_instance_id: INTEGER_64)
 			-- fetch_by_instance_id --> object
 		local
 			l_query: SQLITE_QUERY_STATEMENT
@@ -321,35 +306,53 @@ feature -- Retrieve (fetch by ...) Operations
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
 				-- Fetch the atr_value_table for entity_id and attribute name ...
-			l_sql := SELECT_kw.twin
-			l_sql.append_string_general (attribute_atr_value_table_field_name)
-			l_sql.append_character (comma)
-			l_sql.append_string_general (attribute_atr_id_field_name)
-			l_sql.append_string_general (FROM_kw)
-			l_sql.append_string_general (attribute_table_name)
-			l_sql.append_string_general (WHERE_kw)
-			l_sql.append_string_general (entity_ent_id_field_name)
-			l_sql.append_string_general (equals)
-			l_sql.append_string_general (a_entity_id.out)
-			l_sql.append_string_general (AND_kw)
-			l_sql.append_string_general (attribute_atr_name_field_name)
-			l_sql.append_string_general (equals)
-			l_sql.append_character (open_single_quote)
-			l_sql.append_string_general (a_setter.attribute_name)
-			l_sql.append_character (close_single_quote)
-			l_sql.append_character (semi_colon)
+--			l_sql := SELECT_kw.twin
+--			l_sql.append_string_general (attribute_atr_value_table_field_name)
+--			l_sql.append_character (comma)
+--			l_sql.append_string_general (attribute_atr_id_field_name)
+--			l_sql.append_string_general (FROM_kw)
+--			l_sql.append_string_general (attribute_table_name)
+--			l_sql.append_string_general (WHERE_kw)
+--			l_sql.append_string_general (entity_ent_id_field_name)
+--			l_sql.append_string_general (equals)
+--			l_sql.append_string_general (a_entity_id.out)
+--			l_sql.append_string_general (AND_kw)
+--			l_sql.append_string_general (attribute_atr_name_field_name)
+--			l_sql.append_string_general (equals)
+--			l_sql.append_character (open_single_quote)
+--			l_sql.append_string_general (a_setter.attribute_name)
+--			l_sql.append_character (close_single_quote)
+--			l_sql.append_character (semi_colon)
 
 
-			create l_query.make (l_sql, database)
-			l_cursor := l_query.execute_new
-			l_cursor.start
-			check has_result: not l_cursor.after end
-			check attached {STRING} l_cursor.item.value (1) as al_result then
-				l_value_table_name := al_result
+--			create l_query.make (l_sql, database)
+--			l_cursor := l_query.execute_new
+--			l_cursor.start
+--			check has_result: not l_cursor.after end
+--			check attached {STRING} l_cursor.item.value (1) as al_result then
+--				l_value_table_name := al_result
+--			end
+			inspect
+				a_setter.setter_type_code
+			when 1 then
+				l_value_table_name := "Value_boolean"
+			when 2 then
+				l_value_table_name := "Value_character"
+			when 3 then
+				l_value_table_name := "Value_integer"
+			when 4 then
+				l_value_table_name := "Value_numeric"
+			when 5 then
+				l_value_table_name := "Value_real"
+			when 6 then
+				l_value_table_name := "Value_text"
+			else
+				l_value_table_name := "Value_text"
 			end
-			check attached {INTEGER_64} l_cursor.item.value (2) as al_atr_id then
+
 					-- Now fetch the actual value ...
-				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_atr_id.out + " and instance_id = " + a_instance_id.out + ";"
+			check has_atr_id: attached a_setter.attribute_name.case_insensitive_hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
+				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_attributes.atr_id.out + " and instance_id = " + a_instance_id.out + ";"
 				create l_query.make (l_sql, database)
 				l_cursor := l_query.execute_new
 				l_cursor.start
@@ -409,6 +412,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 				create {SQLITE_INTEGER_ARG}.make (":IS_DEL", 0),
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out)
 				])
+			entities.force (entity_id (a_entity_name), a_entity_name)
 		end
 
 	has_entity (a_entity_name: STRING): BOOLEAN
@@ -481,7 +485,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		do
 				-- Compute attribute data type
 			if attached {ABSOLUTE} a_value as al_value then
-				value_table := date_value_table_name; value := al_value.out
+				value_table := text_value_table_name; value := al_value.out --date_value_table_name
 			elseif attached {STRING} a_value as al_value then
 				value_table := text_value_table_name; value := al_value.out
 			elseif attached {INTEGER} a_value as al_value then
@@ -608,7 +612,6 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				do_nothing -- soon: just get the atr_id
 			else
 				store_new_attribute (a_name, a_entity_id, a_value_table)
-				recently_found_attributes.force (a_name, a_name.case_insensitive_hash_code)
 			end
 			last_attribute_id := attribute_id (a_name)
 		ensure
@@ -633,7 +636,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
 				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
 				])
-			recently_found_attributes.force (a_name, a_name.case_insensitive_hash_code)
+			attributes.force ([attribute_id (a_name), a_entity_id, a_value_table], a_name.case_insensitive_hash_code)
 		end
 
 	has_attribute (a_name: STRING): BOOLEAN
@@ -641,7 +644,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 		local
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			Result := recently_found_attributes.has (a_name.case_insensitive_hash_code)
+			Result := attributes.has (a_name.case_insensitive_hash_code)
 			if not Result then
 				l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name)
 				l_result.start
@@ -742,18 +745,10 @@ feature {EAV_DB_ENABLED} -- Implementation: Constants
 feature {NONE} -- Implementation: Field constructs
 
 	date_field,
-	character_field,
-	varchar_field,
 	text_field (a_name: STRING): STRING
 			-- Date, character, varchar, and text fields are all TEXT.
 		do
 			Result := a_name; Result.append (TEXT_kw)
-		end
-
-	numeric_field (a_name: STRING): STRING
-			-- Numeric fields really need direct support as INTEGER, REAL, or DECIMAL.
-		do
-			Result := a_name; Result.append (NUMERIC_kw)
 		end
 
 	boolean_field,
@@ -763,8 +758,6 @@ feature {NONE} -- Implementation: Field constructs
 			Result := a_name; Result.append (INTEGER_kw)
 		end
 
-	float_field,
-	double_field,
 	real_field (a_name: STRING): STRING
 			-- Floats and doubles are reals.
 		do

@@ -15,11 +15,16 @@ feature -- Basic Operations
 			-- `fetch_objects_by_ids' in `a_objects', filling in each `object' with data from `id'.
 			-- Each `object' passed will be updated with its data. Objects not updated will still
 			-- be {EAV_DB_ENABLED}.is_new = True and {EAV_DB_ENABLED}.is_defaulted = True.
+		require
+			has_object: a_objects.count > 0
+		local
+			l_ent_id: INTEGER_64
 		do
+			l_ent_id := entity_id (a_objects [1].object)
 			across
 				a_objects as ic_objects
 			loop
-				fetch_by_id (ic_objects.item.object, ic_objects.item.id)
+				fetch_by_id (ic_objects.item.object, ic_objects.item.id, l_ent_id)
 			end
 		end
 
@@ -35,21 +40,21 @@ feature -- Basic Operations
 				a_ids as ic_ids
 			loop
 				l_object := a_object.twin
-				fetch_by_id (l_object, ic_ids.item)
+				fetch_by_id (l_object, ic_ids.item, entity_id (l_object))
 				Result.force (l_object)
 			end
 		end
 
-	fetch_by_id (a_object: EAV_DB_ENABLED; a_id: INTEGER_64)
+	fetch_by_id (a_object: EAV_DB_ENABLED; a_id, a_ent_id: INTEGER_64)
 			-- `fetch_by_id' of `a_id' into `a_object'.
 		require
 			is_new_default: a_object.is_new and not a_object.is_defaulted
 		do
 				-- Walk each `a_object' attribute and fetch the data for `a_id'.
 			across
-				a_object.dbe_enabled_setter_features (a_object) as ic_attributes
+				a_object.dbe_enabled_setter_features (a_object) as ic_setters
 			loop
-				database.fetch_by_instance_id (entity_id (a_object), ic_attributes.item, a_id)
+				database.fetch_by_instance_id (a_ent_id, ic_setters.item, a_id)
 			end
 		end
 

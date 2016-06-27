@@ -21,7 +21,7 @@ feature {NONE} -- Initialization
 			create last_name_dbe.make_empty
 		end
 
-feature {TEST_SET_BRIDGE} -- Access
+feature -- Access
 
 	first_name_dbe: STRING
 			-- `first_name_dbe', which is database enabled (dbe).
