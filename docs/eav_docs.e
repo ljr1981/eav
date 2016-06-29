@@ -10,7 +10,17 @@ feature {NONE} -- Implementation
 
 	documentation: detachable EAV_DOCS
 			-- `documentation' for Current {EAV_DOCS}.
+
 ;note
+	table_of_contents: "[
+		1. Fetching
+		2. Design
+		]"
+
+	fetching: "[
+		Getting data from the EAV data model.
+		]"
+
 	design: "[
 		See EIS link below.
 		

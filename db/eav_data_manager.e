@@ -99,6 +99,72 @@ feature -- Basic Operations
 
 	ent_id_column_number: NATURAL_32 = 1
 
+feature -- SELECT
+
+	flattening_SELECT_sql (a_object: EAV_DB_ENABLED; a_where_clause: STRING): STRING
+			-- `flattening_SELECT_sql' is a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.
+		note
+			design: "[
+				This is the notion of a general SELECT query against an EAV table, which
+				is designed to "flatten" the table from the EAV model into something akin
+				to the standard flat-file table format of an RDBMS.
+				]"
+		local
+			l_data_columns,
+			l_joins,
+			l_operator_and_value: STRING
+			i: INTEGER
+		once ("object")
+			Result := SELECT_from_database_template_string.twin
+
+				-- Data columns
+			create l_data_columns.make_empty
+			across
+				a_object.dbe_enabled_features (a_object) as ic_features
+			from
+				i := 1
+			loop
+				l_data_columns.append_string_general (Data_column_template_string)
+				l_data_columns.replace_substring_all ("<<FLD_NO>>", i.out)
+				l_data_columns.replace_substring_all ("<<FLD_NAME>>", ic_features.item.feature_name)
+				l_data_columns.append_character (',')
+				i := i + 1
+			end
+			l_data_columns.remove_tail (1)
+			Result.replace_substring_all ("<<DATA_COLUMNS>>", l_data_columns)
+
+				-- Joins
+			create l_joins.make_empty
+			across
+				database.attributes as ic_attributes
+			loop
+				if ic_attributes.cursor_index = 1 then
+						-- `JOIN_clause_p1_template_string'
+					l_joins.append_string_general (JOIN_clause_p1_template_string)
+						-- <<TABLE_NAME>>
+					l_joins.replace_substring_all ("<<TABLE_NAME>>", ic_attributes.item.value_table_name)
+						-- <<ATR_ID>>
+					l_joins.replace_substring_all ("<<ATR_ID>>", ic_attributes.item.atr_id.out)
+				else
+						-- `JOIN_clause_pn_template_string'
+					l_joins.append_string_general (JOIN_clause_pn_template_string)
+						-- <<TABLE_NAME>>
+					l_joins.replace_substring_all ("<<TABLE_NAME>>", ic_attributes.item.value_table_name)
+						-- <<FLD_NO>>
+					l_joins.replace_substring_all ("<<FLD_NO>>", ic_attributes.cursor_index.out)
+						-- <<ATR_ID>>
+					l_joins.replace_substring_all ("<<ATR_ID>>", ic_attributes.item.atr_id.out)
+				end
+			end
+			Result.replace_substring_all ("<<JOINS>>", l_joins)
+			Result.replace_substring_all ("<<WHERE_CLAUSE>>", a_where_clause)
+		end
+
+	SELECT_from_database_template_string: STRING = "SELECT p1.instance_id, <<DATA_COLUMNS>> FROM Attribute <<JOINS>> WHERE <<WHERE_CLAUSE>>"
+	Data_column_template_string: STRING = "p<<FLD_NO>>.val_item AS <<FLD_NAME>>"
+	JOIN_clause_p1_template_string: STRING = "JOIN <<TABLE_NAME>> AS p1 ON p1.atr_id = <<ATR_ID>> "
+	JOIN_clause_pn_template_string: STRING = "JOIN <<TABLE_NAME>> AS p<<FLD_NO>> ON p1.instance_id = p<<FLD_NO>>.instance_id AND p<<FLD_NO>>.atr_id = <<ATR_ID>> "
+
 feature -- Access
 
 	database: attached like database_type_anchor

@@ -89,6 +89,32 @@ feature -- Creation Tests
 			remove_data
 		end
 
+	test_SELECT_generation
+		local
+			l_mock: MOCK_OBJECT
+			l_system: EAV_SYSTEM
+			l_manager: EAV_DATA_MANAGER
+		do
+			create l_system.make ("system", test_data_path)
+			create l_manager
+			l_manager.set_database (l_system.database_n (1))
+
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("test_first")
+			l_mock.set_last_name_dbe ("test_last")
+			l_mock.set_age_dbe (1)
+			l_mock.save_in_database (l_mock, l_system.database_n (1))
+
+			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.flattening_SELECT_sql (l_mock, "p1.instance_id = 1"))
+
+			l_system.close_all
+			--remove_data
+		end
+
+feature {NONE} -- Testing: SELECT support
+
+	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3  WHERE p1.instance_id = 1"
+
 feature {NONE} -- Test Support
 
 	tuple_anchor: detachable TUPLE [setter_agent: PROCEDURE [detachable ANY]; setter_name: STRING_8]
