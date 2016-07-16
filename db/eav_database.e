@@ -53,7 +53,7 @@ feature {NONE} -- Initialization
 			create Result.make_current
 		end
 
-feature {EAV_DB_ENABLED} -- Access: Database Info
+feature {EAV_DATA_MANAGER} -- Access: Database Info
 
 	entities: HASH_TABLE [TUPLE [ent_id: INTEGER_64], STRING]
 			-- `entities' in memory; sync'd with DB.
@@ -172,6 +172,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 		local
 			l_modify: SQLITE_MODIFY_STATEMENT
 			l_last_result: STRING
+			l_sql: STRING
 		do
 			a_item_field_agent.call ("val_item")
 			check has_result: attached {STRING} a_item_field_agent.last_result as al_result then l_last_result := al_result end
@@ -186,7 +187,14 @@ feature {NONE} -- Implementation: EAV Build Operations
 													integer_field ("modifier_id")
 													>>), database)
 			l_modify.execute
+
+			l_sql := create_index_sql.twin
+			l_sql.replace_substring_all ("<<TABLE_NAME>>", a_table_name)
+			create l_modify.make (l_sql, database)
+			l_modify.execute
 		end
+
+	create_index_sql: STRING = "CREATE UNIQUE INDEX <<TABLE_NAME>>_atr_instance ON <<TABLE_NAME>> (atr_id, instance_id);"
 
 feature -- Store Operations
 
@@ -306,46 +314,18 @@ feature -- Retrieve (fetch by ...) Operations
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
 				-- Fetch the atr_value_table for entity_id and attribute name ...
---			l_sql := SELECT_kw.twin
---			l_sql.append_string_general (attribute_atr_value_table_field_name)
---			l_sql.append_character (comma)
---			l_sql.append_string_general (attribute_atr_id_field_name)
---			l_sql.append_string_general (FROM_kw)
---			l_sql.append_string_general (attribute_table_name)
---			l_sql.append_string_general (WHERE_kw)
---			l_sql.append_string_general (entity_ent_id_field_name)
---			l_sql.append_string_general (equals)
---			l_sql.append_string_general (a_entity_id.out)
---			l_sql.append_string_general (AND_kw)
---			l_sql.append_string_general (attribute_atr_name_field_name)
---			l_sql.append_string_general (equals)
---			l_sql.append_character (open_single_quote)
---			l_sql.append_string_general (a_setter.attribute_name)
---			l_sql.append_character (close_single_quote)
---			l_sql.append_character (semi_colon)
-
-
---			create l_query.make (l_sql, database)
---			l_cursor := l_query.execute_new
---			l_cursor.start
---			check has_result: not l_cursor.after end
---			check attached {STRING} l_cursor.item.value (1) as al_result then
---				l_value_table_name := al_result
---			end
 			inspect
 				a_setter.setter_type_code
-			when 1 then
+			when BOOLEAN_value_type_code then
 				l_value_table_name := "Value_boolean"
-			when 2 then
-				l_value_table_name := "Value_character"
-			when 3 then
+			when INTEGER_value_type_code then
 				l_value_table_name := "Value_integer"
-			when 4 then
-				l_value_table_name := "Value_numeric"
-			when 5 then
+			when REAL_value_type_code then
 				l_value_table_name := "Value_real"
-			when 6 then
+			when TEXT_value_type_code then
 				l_value_table_name := "Value_text"
+			when BLOB_value_type_code then
+				l_value_table_name := "Value_blob"
 			else
 				l_value_table_name := "Value_text"
 			end
@@ -365,6 +345,33 @@ feature -- Retrieve (fetch by ...) Operations
 						a_setter.setter_agent.call ([l_cursor.item.value (1)])
 					end
 				end
+			end
+		end
+
+	fetch_by_SELECT (a_object: EAV_DB_ENABLED; a_sql: STRING): ARRAYED_LIST [EAV_DB_ENABLED]
+			-- `fetch_by_SELECT'.
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_sql,
+			l_value_table_name: STRING
+			l_row_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_row: SQLITE_RESULT_ROW
+		do
+			create l_query.make (a_sql, database)
+			l_row_cursor := l_query.execute_new
+			create Result.make (1_000)
+			from
+				l_row_cursor.start
+			until
+				l_row_cursor.after
+			loop
+				l_row := l_row_cursor.item
+				across
+					1 |..| l_row.count.as_integer_32 as ic
+				loop
+					-- holy crap!!!
+				end
+				l_row_cursor.forth
 			end
 		end
 

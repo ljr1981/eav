@@ -136,7 +136,7 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: DB Feature Lists
 
 feature {TEST_SET_BRIDGE, EAV_DATA_MANAGER} -- Implementation: DB Feature Lists
 
-	dbe_enabled_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
+	dbe_enabled_features (a_object: ANY): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING; value_type_code: INTEGER], STRING]
 			-- A "hash" of *_dbe (database enabled) fields, recognizable by feature name suffix.
 		once ("object")
 			Result := db_features (a_object, db_enabled_feature_suffix)
@@ -171,49 +171,49 @@ feature {TEST_SET_BRIDGE, EAV_DATA_MANAGER} -- Implementation: DB Feature Lists
 					if attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name and then al_name.tail (db_enabled_feature_suffix.count).same_string (db_enabled_feature_suffix) then
 							-- BOOLEAN
 						if reflector.field_type (ic_counter.item, a_object) = reflector.Boolean_type then
-							Result.force ([agent reflector.set_boolean_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_BOOLEAN], al_name)
+							Result.force ([agent reflector.set_boolean_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 
 							-- CHARACTER_*
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.character_8_type then
-							Result.force ([agent reflector.set_character_8_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_CHARACTER], al_name)
+							Result.force ([agent reflector.set_character_8_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.character_32_type then
-							Result.force ([agent reflector.set_character_32_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_CHARACTER], al_name)
+							Result.force ([agent reflector.set_character_32_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.character_type then
-							Result.force ([agent reflector.set_character_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_CHARACTER], al_name)
+							Result.force ([agent reflector.set_character_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 
 							-- INTEGER_*
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.integer_8_type then
-							Result.force ([agent reflector.set_integer_8_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_INTEGER], al_name)
+							Result.force ([agent reflector.set_integer_8_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.integer_16_type then
-							Result.force ([agent reflector.set_integer_16_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_INTEGER], al_name)
+							Result.force ([agent reflector.set_integer_16_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.integer_32_type then
-							Result.force ([agent reflector.set_integer_32_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_INTEGER], al_name)
+							Result.force ([agent reflector.set_integer_32_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.integer_64_type then
-							Result.force ([agent reflector.set_integer_64_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_INTEGER], al_name)
+							Result.force ([agent reflector.set_integer_64_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.integer_type then
-							Result.force ([agent reflector.set_integer_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_INTEGER], al_name)
+							Result.force ([agent reflector.set_integer_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 
 							-- NATURAL_*
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.natural_8_type then
-							Result.force ([agent reflector.set_natural_8_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_NATURAL], al_name)
+							Result.force ([agent reflector.set_natural_8_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.natural_16_type then
-							Result.force ([agent reflector.set_natural_16_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_NATURAL], al_name)
+							Result.force ([agent reflector.set_natural_16_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.natural_32_type then
-							Result.force ([agent reflector.set_natural_32_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_NATURAL], al_name)
+							Result.force ([agent reflector.set_natural_32_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.natural_64_type then
-							Result.force ([agent reflector.set_natural_64_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_NATURAL], al_name)
+							Result.force ([agent reflector.set_natural_64_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 
 							-- REAL_*
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.real_32_type then
-							Result.force ([agent reflector.set_real_32_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_REAL], al_name)
+							Result.force ([agent reflector.set_real_32_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.real_64_type then
-							Result.force ([agent reflector.set_real_64_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_REAL], al_name)
+							Result.force ([agent reflector.set_real_64_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						elseif reflector.field_type (ic_counter.item, a_object) = reflector.real_type then
-							Result.force ([agent reflector.set_real_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_REAL], al_name)
+							Result.force ([agent reflector.set_real_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 
 							-- Reference types (like STRINGs and other things)
 						else
-							Result.force ([agent reflector.set_reference_field(ic_counter.item, a_object, ?), remove_suffixes (al_name), setter_type_code_REFERENCE], al_name)
+							Result.force ([agent reflector.set_reference_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)
 						end
 					end
 				end
@@ -234,16 +234,35 @@ feature {TEST_SET_BRIDGE, EAV_DATA_MANAGER} -- Implementation: DB Feature Lists
 
 feature {NONE} -- Implementation: Feature lists
 
-	db_features (a_object: ANY; a_suffix: STRING): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING], STRING]
+	db_features (a_object: ANY; a_suffix: STRING): HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING; value_type_code: INTEGER], STRING]
 			-- `db_features' of `a_object' for `a_suffix' in the feature name.
+		local
+			l_field: detachable ANY
+			l_type_value: INTEGER
 		do
 			create Result.make (50)
 			across
 				1 |..| reflector.field_count (a_object) as ic_counter
 			loop
-				if attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name and then al_name.tail (a_suffix.count).same_string (a_suffix) --has_substring (a_suffix)
+				if
+					attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name
+						and then al_name.tail (a_suffix.count).same_string (a_suffix)
 				then
-					Result.force ([db_feature_agent (ic_counter.item, a_object), remove_suffixes (al_name)], al_name)
+					l_field := reflector.field (ic_counter.item, a_object)
+					if attached {BOOLEAN} l_field then
+						l_type_value := BOOLEAN_value_type_code
+					elseif attached {INTEGER} l_field then
+						l_type_value := INTEGER_value_type_code
+					elseif attached {NUMERIC} l_field then
+						l_type_value := REAL_value_type_code
+					elseif attached {STRING} l_field then
+						l_type_value := TEXT_value_type_code
+					elseif attached {CHARACTER} l_field then
+						l_type_value := TEXT_value_type_code
+					else
+						check unknown_type: False end
+					end
+					Result.force ([db_feature_agent (ic_counter.item, a_object), remove_suffixes (al_name), l_type_value], al_name)
 				end
 			end
 		ensure

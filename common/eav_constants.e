@@ -66,24 +66,18 @@ feature -- Constants
 	modified_date_field_name: STRING = "modified_date"
 	modifier_id_field_name: STRING = "modifier_id"
 
-	blob_value_table_name: STRING = "Value_blob"
 	boolean_value_table_name: STRING = "Value_boolean"
-	character_value_table_name: STRING = "Value_character"
---	date_value_table_name: STRING = "Value_date"
---	double_value_table_name: STRING = "Value_double"
---	float_value_table_name: STRING = "Value_float"
 	integer_value_table_name: STRING = "Value_integer"
---	number_value_table_name: STRING = "Value_numeric"
 	real_value_table_name: STRING = "Value_real"
 	text_value_table_name: STRING = "Value_text"
---	varchar_value_table_name: STRING = "Value_varchar"
+	blob_value_table_name: STRING = "Value_blob"
 
-	setter_type_code_BOOLEAN: INTEGER = 1
-	setter_type_code_CHARACTER: INTEGER = 2
-	setter_type_code_INTEGER: INTEGER = 3
-	setter_type_code_NATURAL: INTEGER = 4
-	setter_type_code_REAL: INTEGER = 5
-	setter_type_code_REFERENCE: INTEGER = 6
+	BOOLEAN_value_type_code: INTEGER = 1
+	INTEGER_value_type_code: INTEGER = 2
+	REAL_value_type_code: INTEGER = 3
+	TEXT_value_type_code: INTEGER = 4
+	BLOB_value_type_code: INTEGER = 5
+	REFERENCE_value_type_code: INTEGER = 6 -- Reserved for object-graph reference features
 
 note
 	design_intent: "[

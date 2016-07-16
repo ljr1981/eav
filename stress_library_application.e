@@ -91,7 +91,7 @@ feature {NONE} -- Initialization
 --			l_file.close
 
 			l_system.close_all
---			remove_data
+			remove_data
 		end
 
 feature {NONE} -- Implementation
