@@ -160,15 +160,30 @@ feature {TEST_SET_BRIDGE, EAV_DATA_MANAGER} -- Implementation: DB Feature Lists
 				All of the basic types are covered by direct if/else-if constructs, otherwise the else handles all
 				reference types (like {STRING}s and other non-basic types).
 			]"
+		local
+			l_count,
+			l_index: INTEGER
+			l_getters: HASH_TABLE [TUPLE [feature_agent: FUNCTION [detachable ANY]; feature_name: STRING_8; value_type_code: INTEGER_32], STRING_8]
+			l_reflector_field,
+			l_getter_field: STRING
 		once ("object")
 			create Result.make (50)
+			l_getters := dbe_enabled_features (a_object)
 			across
 				dbe_enabled_features (a_object) as ic_getters
 			loop
+				l_count := reflector.field_count (a_object)
 				across
 					1 |..| reflector.field_count (a_object) as ic_counter
 				loop
-					if attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name and then al_name.tail (db_enabled_feature_suffix.count).same_string (db_enabled_feature_suffix) then
+					l_index := ic_counter.item
+					l_reflector_field := reflector.field_name (ic_counter.item, a_object)
+					l_getter_field := ic_getters.item.feature_name
+					if
+						attached {STRING} reflector.field_name (ic_counter.item, a_object) as al_name and then
+							al_name.tail (db_enabled_feature_suffix.count).same_string (db_enabled_feature_suffix) and then
+							al_name.has_substring (ic_getters.item.feature_name)
+					then
 							-- BOOLEAN
 						if reflector.field_type (ic_counter.item, a_object) = reflector.Boolean_type then
 							Result.force ([agent reflector.set_boolean_field (ic_counter.item, a_object, ?), remove_suffixes (al_name), ic_getters.item.value_type_code], al_name)

@@ -37,7 +37,7 @@ feature -- Test routines
 		note
 			testing:
 				"execution/isolated",
-				"execution/serial"
+				"execution/serial/group_1"
 		local
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER

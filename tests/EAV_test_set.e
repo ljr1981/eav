@@ -42,7 +42,7 @@ feature -- Creation Tests
 		note
 			testing:
 				"execution/isolated",
-				"execution/serial"
+				"execution/serial/group_1"
 		local
 			l_system: EAV_SYSTEM
 		do
