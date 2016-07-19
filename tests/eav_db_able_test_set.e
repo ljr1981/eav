@@ -109,7 +109,7 @@ feature -- Creation Tests
 			l_mock.set_age_dbe (1)
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
-			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.object_by_SELECT (l_mock, <<["p1.instance_id", "=", "1", ""]>>).text)
+			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.SELECT_all_with_filters (l_mock, <<["p1.instance_id", "=", "1", ""]>>).text)
 
 			l_system.close_all
 			remove_data
@@ -143,7 +143,7 @@ feature -- Creation Tests
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
 			create l_mock.make_with_reasonable_defaults
-			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_SELECT (l_mock, <<>>))
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.SELECT_all_with_filters (l_mock, <<>>))
 
 			assert_integers_equal ("two_objects", 2, l_results.count)
 
@@ -159,7 +159,7 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
-			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["first_name", "=", "'Fred'", ""]>>))
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.SELECT_all_with_filters (l_mock, <<["first_name", "=", "'Fred'", ""]>>))
 
 			assert_integers_equal ("one_object", 1, l_results.count)
 
@@ -170,7 +170,7 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
-			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["age", "=", "30", ""]>>))
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.SELECT_all_with_filters (l_mock, <<["age", "=", "30", ""]>>))
 
 			assert_integers_equal ("one_object_2", 1, l_results.count)
 
@@ -194,7 +194,7 @@ feature -- Creation Tests
 
 
 			create l_mock.make_with_reasonable_defaults
-			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["age", "=", "30", ""]>>))
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.SELECT_all_with_filters (l_mock, <<["age", "=", "30", ""]>>))
 
 			assert_integers_equal ("two_object_2", 2, l_results.count)
 
