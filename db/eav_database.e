@@ -353,12 +353,12 @@ feature -- Retrieve (fetch by ...) Operations
 		local
 			l_object: EAV_DB_ENABLED
 			l_column: TUPLE
-			l_query_result: ARRAYED_LIST [TUPLE]
+			l_TUPLEs_Result: ARRAYED_LIST [TUPLE]
 		do
-			l_query_result := fetch_TUPLE_by_SELECT (a_object, a_query)
-			create Result.make (l_query_result.count)
+			l_TUPLEs_Result := fetch_TUPLEs_by_SELECT (a_object, a_query)
+			create Result.make (l_TUPLEs_Result.count)
 			across
-				l_query_result as ic_tuple_rows
+				l_TUPLEs_Result as ic_tuple_rows
 			loop
 				l_object := a_object.twin
 				check is_tuple: attached {TUPLE} ic_tuple_rows.item [1] as al_column then
@@ -378,8 +378,8 @@ feature -- Retrieve (fetch by ...) Operations
 			end
 		end
 
-	fetch_TUPLE_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [TUPLE]
-			-- `fetch_TUPLE_by_SELECT'.
+	fetch_TUPLEs_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [TUPLE]
+			-- `fetch_TUPLEs_by_SELECT'.
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_sql,
