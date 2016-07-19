@@ -56,7 +56,11 @@ feature -- Test routines
 			create l_manager
 			l_manager.set_database (l_system.database_n (1))
 			create l_mock.make_with_reasonable_defaults
+
+				-- Ensure it is empty ...
 			assert_strings_equal ("empty_first_name", "", l_mock.first_name_dbe)
+
+				-- Fetch the `l_mock' #1 and entity_id based on `l_mock'
 			l_manager.fetch_by_id (l_mock, 1, l_manager.entity_id (l_mock))
 			assert_strings_equal ("first_name", "Foghorn", l_mock.first_name_dbe)
 			assert_strings_equal ("last_name", "Leghorn", l_mock.last_name_dbe)

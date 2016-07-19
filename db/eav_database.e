@@ -217,14 +217,14 @@ feature -- Store Operations
 		do
 			-- entity_name, feature_data (a_object).to_array
 				-- Handle Entity first ...
-			store_entity (a_object.computed_entity_name)
+			store_entity (a_object.entity_name)
 
 				-- New instance or existing?
 			l_is_new := a_object.instance_id = new_instance_id_constant
 			if a_object.instance_id = new_instance_id_constant then
-				last_instance_count := next_entity_instance_id (a_object.Computed_entity_name)
+				last_instance_count := next_entity_instance_id (a_object.entity_name)
 				a_object.set_instance_id (last_instance_count)
-				update_entity_instance_count (a_object.Computed_entity_name, a_object.instance_id)
+				update_entity_instance_count (a_object.entity_name, a_object.instance_id)
 			end
 			check not_new_instance: not a_object.is_new end
 
@@ -348,7 +348,7 @@ feature -- Retrieve (fetch by ...) Operations
 			end
 		end
 
-	fetch_by_SELECT (a_object: EAV_DB_ENABLED; a_sql: STRING): ARRAYED_LIST [EAV_DB_ENABLED]
+	fetch_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [EAV_DB_ENABLED]
 			-- `fetch_by_SELECT'.
 		local
 			l_query: SQLITE_QUERY_STATEMENT
@@ -356,8 +356,10 @@ feature -- Retrieve (fetch by ...) Operations
 			l_value_table_name: STRING
 			l_row_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 			l_row: SQLITE_RESULT_ROW
+			l_object: EAV_DB_ENABLED
+			l_index: INTEGER_32
 		do
-			create l_query.make (a_sql, database)
+			create l_query.make (a_query.text, database)
 			l_row_cursor := l_query.execute_new
 			create Result.make (1_000)
 			from
@@ -366,10 +368,20 @@ feature -- Retrieve (fetch by ...) Operations
 				l_row_cursor.after
 			loop
 				l_row := l_row_cursor.item
+				l_object := a_object.twin
+				Result.force (l_object)
+				if attached {INTEGER_64} l_row.value ((1).as_natural_32) as al_instance_id then
+					l_object.set_instance_id (al_instance_id)
+				end
 				across
-					1 |..| l_row.count.as_integer_32 as ic
+					2 |..| l_row.count.as_integer_32 as ic
 				loop
-					-- holy crap!!!
+					-- holy crap!!! <-- I want to map each row cursor item to its a_object field,
+					--					but I clearly have no map because the map is buried in the
+					--					a_sql: STRING (above). So, we need an object mapping:
+					--					Query-columns <--> a_object-fields
+					l_index := ic.item
+					l_object.set_field (l_object, a_query.feature_names [ic.item - 1], l_row.value (l_index.as_natural_32))
 				end
 				l_row_cursor.forth
 			end

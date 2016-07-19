@@ -65,7 +65,7 @@ feature -- Basic Operations
 			l_sql: STRING
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			if attached {INTEGER_64} previously_fetched_entity_ids.has (a_object.computed_entity_name.hash_code) as al_entity_id then
+			if attached {INTEGER_64} entity_id_cache.has (a_object.entity_name.hash_code) as al_entity_id then
 				Result := al_entity_id
 			else
 				l_sql := SELECT_kw.twin
@@ -76,7 +76,7 @@ feature -- Basic Operations
 				l_sql.append_string_general (entity_ent_name_field_name)
 				l_sql.append_string_general (equals)
 				l_sql.append_character (open_single_quote)
-				l_sql.append_string_general (a_object.computed_entity_name)
+				l_sql.append_string_general (a_object.entity_name)
 				l_sql.append_character (close_single_quote)
 				l_sql.append_character (semi_colon)
 
@@ -86,13 +86,13 @@ feature -- Basic Operations
 				check has_result: not l_cursor.after end
 				check attached {INTEGER_64} l_cursor.item.value (ent_id_column_number) as al_result then
 					Result := al_result
-					previously_fetched_entity_ids.force (Result, a_object.computed_entity_name.hash_code)
+					entity_id_cache.force (Result, a_object.entity_name.hash_code)
 				end
 			end
 		end
 
-	previously_fetched_entity_ids: HASH_TABLE [INTEGER_64, INTEGER]
-			-- `previously_fetched_entity_ids'.
+	entity_id_cache: HASH_TABLE [INTEGER_64, INTEGER]
+			-- `entity_id_cache', keyed on "a_object.computed_entity_name.hash_code".
 		attribute
 			create Result.make (100)
 		end
@@ -101,21 +101,34 @@ feature -- Basic Operations
 
 feature -- SELECT
 
-	flattening_SELECT_sql (a_object: EAV_DB_ENABLED; a_where_clause: STRING): STRING
-			-- `flattening_SELECT_sql' is a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.
+	object_by_SELECT (a_object: EAV_DB_ENABLED; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
+			-- `object_by_SELECT' gives a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.
 		note
 			design: "[
 				This is the notion of a general SELECT query against an EAV table, which
 				is designed to "flatten" the table from the EAV model into something akin
 				to the standard flat-file table format of an RDBMS.
 				]"
+		require
+			valid_filters: across a_filters as ic all
+								not ic.item.column_name.is_empty and then
+								( not ic.item.operator.is_empty and comparison_operators.has (ic.item.operator.hash_code) ) and then
+								not ic.item.value.is_empty and then
+								(ic.cursor_index > 2 implies
+									( not ic.item.and_or_operator.is_empty and logical_operators.has (ic.item.and_or_operator.hash_code) )
+									)
+							end
 		local
 			l_data_columns,
 			l_joins,
-			l_operator_and_value: STRING
+			l_operator_and_value,
+			l_where_clause: STRING
 			i: INTEGER
-		once ("object")
-			Result := SELECT_from_database_template_string.twin
+			l_query_text: STRING
+			l_field_names: ARRAYED_LIST [STRING]
+		do
+			l_query_text := SELECT_from_database_template_string.twin
+			create l_field_names.make (a_object.dbe_enabled_features (a_object).count)
 
 				-- Data columns
 			create l_data_columns.make_empty
@@ -127,11 +140,12 @@ feature -- SELECT
 				l_data_columns.append_string_general (Data_column_template_string)
 				l_data_columns.replace_substring_all ("<<FLD_NO>>", i.out)
 				l_data_columns.replace_substring_all ("<<FLD_NAME>>", ic_features.item.feature_name)
+				l_field_names.force (ic_features.item.feature_name)
 				l_data_columns.append_character (',')
 				i := i + 1
 			end
 			l_data_columns.remove_tail (1)
-			Result.replace_substring_all ("<<DATA_COLUMNS>>", l_data_columns)
+			l_query_text.replace_substring_all ("<<DATA_COLUMNS>>", l_data_columns)
 
 				-- Joins
 			create l_joins.make_empty
@@ -156,11 +170,29 @@ feature -- SELECT
 					l_joins.replace_substring_all ("<<ATR_ID>>", ic_attributes.item.atr_id.out)
 				end
 			end
-			Result.replace_substring_all ("<<JOINS>>", l_joins)
-			Result.replace_substring_all ("<<WHERE_CLAUSE>>", a_where_clause)
+			l_query_text.replace_substring_all ("<<JOINS>>", l_joins)
+			create l_where_clause.make_empty
+			across a_filters as ic_filter loop
+				l_where_clause.append_character (' ')
+				if ic_filter.cursor_index > 1 then
+					l_where_clause.append_string_general (ic_filter.item.and_or_operator)
+					l_where_clause.append_character (' ')
+				end
+				l_where_clause.append_string_general ({EAV_CONSTANTS}.where_kw)
+				l_where_clause.append_character (' ')
+				l_where_clause.append_string_general (ic_filter.item.column_name)
+				l_where_clause.append_character (' ')
+				l_where_clause.append_string_general (ic_filter.item.operator)
+				l_where_clause.append_character (' ')
+				l_where_clause.append_string_general (ic_filter.item.value)
+				l_where_clause.append_character (' ')
+			end
+			l_query_text.replace_substring_all ("<<WHERE_CLAUSE>>", l_where_clause)
+			l_query_text.append_character (';')
+			Result := [l_query_text, l_field_names]
 		end
 
-	SELECT_from_database_template_string: STRING = "SELECT p1.instance_id, <<DATA_COLUMNS>> FROM Attribute <<JOINS>> WHERE <<WHERE_CLAUSE>>"
+	SELECT_from_database_template_string: STRING = "SELECT p1.instance_id, <<DATA_COLUMNS>> FROM Attribute <<JOINS>> <<WHERE_CLAUSE>> GROUP BY p1.instance_id"
 	Data_column_template_string: STRING = "p<<FLD_NO>>.val_item AS <<FLD_NAME>>"
 	JOIN_clause_p1_template_string: STRING = "JOIN <<TABLE_NAME>> AS p1 ON p1.atr_id = <<ATR_ID>> "
 	JOIN_clause_pn_template_string: STRING = "JOIN <<TABLE_NAME>> AS p<<FLD_NO>> ON p1.instance_id = p<<FLD_NO>>.instance_id AND p<<FLD_NO>>.atr_id = <<ATR_ID>> "

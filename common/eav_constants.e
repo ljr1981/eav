@@ -79,6 +79,44 @@ feature -- Constants
 	BLOB_value_type_code: INTEGER = 5
 	REFERENCE_value_type_code: INTEGER = 6 -- Reserved for object-graph reference features
 
+feature -- Lists
+
+	comparison_operators: HASH_TABLE [STRING, INTEGER]
+			-- `comparison_operators' hash.
+		once
+			create Result.make (10)
+			Result.force ("==", ("==").hash_code)
+			Result.force ("=", ("=").hash_code)
+			Result.force ("!=", ("!=").hash_code)
+			Result.force ("<>", ("<>").hash_code)
+			Result.force (">", (">").hash_code)
+			Result.force ("<", ("<").hash_code)
+			Result.force (">=", (">=").hash_code)
+			Result.force ("<=", ("<=").hash_code)
+			Result.force ("!<", ("!<").hash_code)
+			Result.force ("!>", ("!>").hash_code)
+		end
+
+	logical_operators: HASH_TABLE [STRING, INTEGER]
+		once
+			create Result.make (10)
+			Result.force ("AND", ("AND").hash_code)
+			Result.force ("BETWEEN",("BETWEEN").hash_code)
+			Result.force ("EXISTS",	("EXISTS").hash_code)
+			Result.force ("IN",	("IN").hash_code)
+			Result.force ("NOT IN", ("NOT IN").hash_code)
+			Result.force ("LIKE", ("LIKE").hash_code)
+			Result.force ("GLOB", ("GLOB").hash_code)
+			Result.force ("NOT", ("NOT").hash_code)
+			Result.force ("OR", ("OR").hash_code)
+			Result.force ("IS NULL", ("IS NULL").hash_code)
+			Result.force ("IS", ("IS").hash_code)
+			Result.force ("IS NOT", ("IS NOT").hash_code)
+			Result.force ("||", ("||").hash_code)
+			Result.force ("UNIQUE", ("UNIQUE").hash_code)
+
+		end
+
 note
 	design_intent: "[
 		Your_text_goes_here

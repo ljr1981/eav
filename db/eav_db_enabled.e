@@ -47,21 +47,12 @@ feature -- Storage
 
 feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 
-	computed_entity_name: STRING
-			-- `computed_entity_name' from either `entity_name' (if not empty) or
+	entity_name: STRING
+			-- `entity_name' from either `entity_name' (if not empty) or
 			--	{ANY}.generating_type as a reasonable default.
 		once ("object")
-			if not entity_name.is_empty then
-				Result := entity_name.twin
-			else
-				Result := generating_type.twin
-			end
-		end
-
-	entity_name: STRING
-			-- `entity_name' for or from Metadata storage.
-		attribute
 			create Result.make_empty
+			Result.append_string_general (generating_type)
 		end
 
 	instance_id: INTEGER_64
@@ -84,7 +75,8 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 			testing: "[
 				(1) When testing types which are not reflected in the attachment conditions
 					below, you will want to access the Eiffel Studio main menu:
-					Exectution --> Exception handling ... --> Ensure the
+					Exectution --> Exception handling ... --> Ensure both "Disable catcall ..."
+					are checked to disable catcall detection (for the time being).
 			]"
 		do
 			across
@@ -100,7 +92,21 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 					elseif attached {INTEGER_32} a_data as al_data then
 						ic_setters.item.setter_agent.call ([al_data])
 					elseif attached {INTEGER_64} a_data as al_data then
-						ic_setters.item.setter_agent.call ([al_data])
+							-- We may have put an {INTEGER_32} into the database, but we might
+							-- get an {INTEGER_64} back. Even so, the feature is still {INTEGER_32}
+							-- and its setter argument open operands will bear this out. So, we test
+							-- the valid_arguments precondition ourselves. If True, then we do have
+							-- a valid {INTEGER_64} argument to pass. Otherwise, we convert down to
+							-- {INTEGER_32}. We may have to dig further to {INTEGER_16} and {INTEGER_8}
+						if ic_setters.item.setter_agent.valid_arguments ([al_data]) then
+							ic_setters.item.setter_agent.call ([al_data])
+						elseif ic_setters.item.setter_agent.valid_arguments ([al_data.to_integer_32]) then
+							ic_setters.item.setter_agent.call ([al_data.to_integer_32])
+						elseif ic_setters.item.setter_agent.valid_arguments ([al_data.to_integer_16]) then
+							ic_setters.item.setter_agent.call ([al_data.to_integer_16])
+						else
+							ic_setters.item.setter_agent.call ([al_data.to_integer_8])
+						end
 					elseif attached {REAL} a_data as al_data then
 						ic_setters.item.setter_agent.call ([al_data])
 					elseif attached {REAL_32} a_data as al_data then

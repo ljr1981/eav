@@ -109,15 +109,113 @@ feature -- Creation Tests
 			l_mock.set_age_dbe (1)
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
-			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.flattening_SELECT_sql (l_mock, "p1.instance_id = 1"))
+			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.object_by_SELECT (l_mock, <<["p1.instance_id", "=", "1", ""]>>).text)
 
 			l_system.close_all
-			--remove_data
+			remove_data
+		end
+
+	test_SELECT_operation
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial/group_1"
+		local
+			l_mock: MOCK_OBJECT
+			l_system: EAV_SYSTEM
+			l_manager: EAV_DATA_MANAGER
+			l_results: ARRAYED_LIST [EAV_DB_ENABLED]
+		do
+			create l_system.make ("system", test_data_path)
+			create l_manager
+			l_manager.set_database (l_system.database_n (1))
+
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Fred")
+			l_mock.set_last_name_dbe ("Flintstone")
+			l_mock.set_age_dbe (30)
+			l_mock.save_in_database (l_mock, l_system.database_n (1))
+
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Wilma")
+			l_mock.set_last_name_dbe ("Flintstone")
+			l_mock.set_age_dbe (29)
+			l_mock.save_in_database (l_mock, l_system.database_n (1))
+
+			create l_mock.make_with_reasonable_defaults
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_SELECT (l_mock, <<>>))
+
+			assert_integers_equal ("two_objects", 2, l_results.count)
+
+			check is_mock_object_1: attached {MOCK_OBJECT} l_results [1] as al_mock_object then
+				assert_strings_equal ("fred", "Fred", al_mock_object.first_name_dbe)
+				assert_strings_equal ("fred_flintstone", "Flintstone", al_mock_object.last_name_dbe)
+				assert_integers_equal ("fred_age", 30, al_mock_object.age_dbe)
+			end
+			check is_mock_object_1: attached {MOCK_OBJECT} l_results [2] as al_mock_object then
+				assert_strings_equal ("wilma", "Wilma", al_mock_object.first_name_dbe)
+				assert_strings_equal ("wilma_flintstone", "Flintstone", al_mock_object.last_name_dbe)
+				assert_integers_equal ("wilma_age", 29, al_mock_object.age_dbe)
+			end
+
+			create l_mock.make_with_reasonable_defaults
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["first_name", "=", "'Fred'", ""]>>))
+
+			assert_integers_equal ("one_object", 1, l_results.count)
+
+			check is_mock_object_1b: attached {MOCK_OBJECT} l_results [1] as al_mock_object then
+				assert_strings_equal ("fred_2", "Fred", al_mock_object.first_name_dbe)
+				assert_strings_equal ("fred_flintstone_2", "Flintstone", al_mock_object.last_name_dbe)
+				assert_integers_equal ("fred_age_2", 30, al_mock_object.age_dbe)
+			end
+
+			create l_mock.make_with_reasonable_defaults
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["age", "=", "30", ""]>>))
+
+			assert_integers_equal ("one_object_2", 1, l_results.count)
+
+			check is_mock_object_1b: attached {MOCK_OBJECT} l_results [1] as al_mock_object then
+				assert_strings_equal ("fred_3", "Fred", al_mock_object.first_name_dbe)
+				assert_strings_equal ("fred_flintstone_3", "Flintstone", al_mock_object.last_name_dbe)
+				assert_integers_equal ("fred_age_3", 30, al_mock_object.age_dbe)
+			end
+
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Barney")
+			l_mock.set_last_name_dbe ("Rubble")
+			l_mock.set_age_dbe (30)
+			l_mock.save_in_database (l_mock, l_system.database_n (1))
+
+			create l_mock.make_with_reasonable_defaults
+			l_mock.set_first_name_dbe ("Betty")
+			l_mock.set_last_name_dbe ("Rubble")
+			l_mock.set_age_dbe (29)
+			l_mock.save_in_database (l_mock, l_system.database_n (1))
+
+
+			create l_mock.make_with_reasonable_defaults
+			l_results := l_manager.database.fetch_by_select (l_mock, l_manager.object_by_select (l_mock, <<["age", "=", "30", ""]>>))
+
+			assert_integers_equal ("two_object_2", 2, l_results.count)
+
+			check is_mock_object_1b: attached {MOCK_OBJECT} l_results [1] as al_mock_object then
+				assert_strings_equal ("fred_4", "Fred", al_mock_object.first_name_dbe)
+				assert_strings_equal ("fred_flintstone_4", "Flintstone", al_mock_object.last_name_dbe)
+				assert_integers_equal ("fred_age_4", 30, al_mock_object.age_dbe)
+			end
+			check is_mock_object_1b: attached {MOCK_OBJECT} l_results [2] as al_mock_object then
+				assert_strings_equal ("barney", "Barney", al_mock_object.first_name_dbe)
+				assert_strings_equal ("barney_rubble", "Rubble", al_mock_object.last_name_dbe)
+				assert_integers_equal ("barney_age", 30, al_mock_object.age_dbe)
+			end
+
+			l_system.close_all
+			remove_data
 		end
 
 feature {NONE} -- Testing: SELECT support
 
-	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3  WHERE p1.instance_id = 1"
+	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3    WHERE  p1.instance_id = 1  GROUP BY p1.instance_id;"
 
 feature {NONE} -- Test Support
 
