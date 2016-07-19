@@ -35,7 +35,7 @@ feature -- Testing raw writing
 		note
 			testing:
 				"execution/isolated",
-				"execution/serial"
+				"execution/serial/group_1"
 		local
 			l_database: detachable SQLITE_DATABASE
 			l_sql: STRING

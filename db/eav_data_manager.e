@@ -103,15 +103,6 @@ feature {NONE} -- Basic Operations: Support
 
 feature -- Queries
 
-	SELECT_some_columns_with_filters (a_object: EAV_DB_ENABLED; a_fields: ARRAY [STRING]; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
-		do
-			if a_fields.is_empty or (a_fields.count = 1 and then a_fields [1].same_string ("*")) then
-				Result := SELECT_all_columns_with_filters (a_object, a_filters)
-			else
-				create Result
-			end
-		end
-
 	SELECT_all_columns_with_filters (a_object: EAV_DB_ENABLED; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
 			-- `SELECT_all_columns_with_filters' gives a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.
 		require
@@ -124,16 +115,30 @@ feature -- Queries
 									)
 							end
 		local
-			l_data_columns,
-			l_joins,
-			l_operator_and_value,
-			l_where_clause: STRING
+			l_query_text: STRING
+			l_field_names: ARRAYED_LIST [STRING]
+		do
+			Result := SELECT_some_columns_with_filters (a_object, <<>>, a_filters)
+		end
+
+	SELECT_some_columns_with_filters (a_object: EAV_DB_ENABLED; a_fields: ARRAY [STRING]; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
+			-- `SELECT_some_columns_with_filters' gives a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.
+		require
+			valid_filters: across a_filters as ic all
+								not ic.item.column_name.is_empty and then
+								( not ic.item.operator.is_empty and comparison_operators.has (ic.item.operator.hash_code) ) and then
+								not ic.item.value.is_empty and then
+								(ic.cursor_index > 2 implies
+									( not ic.item.and_or_operator.is_empty and logical_operators.has (ic.item.and_or_operator.hash_code) )
+									)
+							end
+		local
 			l_query_text: STRING
 			l_field_names: ARRAYED_LIST [STRING]
 		do
 			l_query_text := SELECT_from_database_template_string.twin
 			create l_field_names.make (a_object.dbe_enabled_features (a_object).count)
-			l_query_text.replace_substring_all ("<<DATA_COLUMNS>>", data_columns (a_object, l_field_names))
+			l_query_text.replace_substring_all ("<<DATA_COLUMNS>>", data_columns (a_object, a_fields, l_field_names))
 			l_query_text.replace_substring_all ("<<JOINS>>", joins)
 			l_query_text.replace_substring_all ("<<WHERE_CLAUSE>>", where_clause (a_filters))
 			l_query_text.append_character (';')
@@ -142,7 +147,7 @@ feature -- Queries
 
 feature {NONE} -- SELECT: Support
 
-	data_columns (a_object: EAV_DB_ENABLED; a_field_names: ARRAYED_LIST [STRING]): STRING
+	data_columns (a_object: EAV_DB_ENABLED; a_select_field_names: ARRAY [STRING]; a_build_field_names: ARRAYED_LIST [STRING]): STRING
 			-- `data_columns' from `a_object' and `a_field_names' to fill and Result {STRING}.
 		local
 			i: INTEGER
@@ -153,11 +158,17 @@ feature {NONE} -- SELECT: Support
 			from
 				i := 1
 			loop
-				Result.append_string_general (Data_column_template_string)
-				Result.replace_substring_all ("<<FLD_NO>>", i.out)
-				Result.replace_substring_all ("<<FLD_NAME>>", ic_features.item.feature_name)
-				a_field_names.force (ic_features.item.feature_name)
-				Result.append_character (',')
+				if
+					a_select_field_names.is_empty or else
+					(a_select_field_names.count = 1 and a_select_field_names [1].same_string ("*")) or else
+					across a_select_field_names as ic some ic.item.same_string (ic_features.item.feature_name) end
+				then
+					Result.append_string_general (Data_column_template_string)
+					Result.replace_substring_all ("<<FLD_NO>>", i.out)
+					Result.replace_substring_all ("<<FLD_NAME>>", ic_features.item.feature_name)
+					a_build_field_names.force (ic_features.item.feature_name)
+					Result.append_character (',')
+				end
 				i := i + 1
 			end
 			Result.remove_tail (1)
