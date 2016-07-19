@@ -125,6 +125,7 @@ feature -- Creation Tests
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER
 			l_results: ARRAYED_LIST [EAV_DB_ENABLED]
+			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
 		do
 			create l_system.make ("system", test_data_path)
 			create l_manager
@@ -216,6 +217,16 @@ feature -- Creation Tests
 			create l_mock.make_with_reasonable_defaults
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_some_columns_with_filters (l_mock, <<"*">>, <<["age", "=", "30", ""]>>))
 			assert_integers_equal ("some_two_object_2", 2, l_results.count)
+
+			create l_mock.make_with_reasonable_defaults
+			l_TUPLE_Results := l_manager.database.fetch_tuples_by_select (l_mock, l_manager.select_some_columns_with_filters (l_mock, <<"age">>, <<["age", "=", "30", ""]>>))
+			assert_integers_equal ("some_TUPLE_two_object_1", 2, l_TUPLE_Results.count)
+			if attached {TUPLE} l_TUPLE_Results.at (1) as al_inner and then attached {INTEGER} al_inner.at (1) as al_instance_id then
+				assert_integers_equal ("instance_id_is_1", 1, al_instance_id)
+			end
+			if attached {TUPLE} l_TUPLE_Results.at (2) as al_inner and then attached {INTEGER} al_inner.at (1) as al_instance_id then
+				assert_integers_equal ("instance_id_is_2", 3, al_instance_id)
+			end
 
 			l_system.close_all
 			remove_data
