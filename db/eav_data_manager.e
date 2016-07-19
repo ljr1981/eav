@@ -103,10 +103,10 @@ feature {NONE} -- Basic Operations: Support
 
 feature -- Queries
 
---	SELECT_some_with_filters (a_object: EAV_DB_ENABLED; a_fields: ARRAY [STRING]; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
---		do
---			create Result
---		end
+	SELECT_some_with_filters (a_object: EAV_DB_ENABLED; a_fields: ARRAY [STRING]; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
+		do
+			create Result
+		end
 
 	SELECT_all_with_filters (a_object: EAV_DB_ENABLED; a_filters: ARRAY [TUPLE [column_name, operator, value, and_or_operator: STRING]]): TUPLE [text: STRING; field_names: ARRAYED_LIST [STRING]]
 			-- `SELECT_all_with_filters' gives a "flattening" SELECT on `a_object' from an EAV `database' filtered with `a_where_clause'.

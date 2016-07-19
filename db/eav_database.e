@@ -348,16 +348,47 @@ feature -- Retrieve (fetch by ...) Operations
 			end
 		end
 
-	fetch_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [EAV_DB_ENABLED]
-			-- `fetch_by_SELECT'.
+	fetch_Object_list_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [EAV_DB_ENABLED]
+			-- `fetch_Object_list_by_SELECT' results in a list of objects like `a_object' for `a_query' with query `text' for `feature_names'
+		local
+			l_object: EAV_DB_ENABLED
+			l_column: TUPLE
+			l_query_result: ARRAYED_LIST [TUPLE]
+		do
+			l_query_result := fetch_TUPLE_by_SELECT (a_object, a_query)
+			create Result.make (l_query_result.count)
+			across
+				l_query_result as ic_tuple_rows
+			loop
+				l_object := a_object.twin
+				check is_tuple: attached {TUPLE} ic_tuple_rows.item [1] as al_column then
+					across
+						al_column as ic_column
+					loop
+						if ic_column.cursor_index = 1  then
+							check is_instance_id: attached {INTEGER_64} ic_column.item as al_instance_id then
+								l_object.set_instance_id (al_instance_id)
+							end
+						else
+							l_object.set_field (l_object, a_query.feature_names [ic_column.cursor_index - 1], ic_column.item)
+						end
+					end
+				end
+				Result.force (l_object)
+			end
+		end
+
+	fetch_TUPLE_by_SELECT (a_object: EAV_DB_ENABLED; a_query: TUPLE [text: STRING; feature_names: ARRAYED_LIST [STRING]]): ARRAYED_LIST [TUPLE]
+			-- `fetch_TUPLE_by_SELECT'.
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_sql,
 			l_value_table_name: STRING
 			l_row_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
 			l_row: SQLITE_RESULT_ROW
-			l_object: EAV_DB_ENABLED
 			l_index: INTEGER_32
+			l_result: ARRAYED_LIST [detachable TUPLE]
+			l_result_row: detachable TUPLE
 		do
 			create l_query.make (a_query.text, database)
 			l_row_cursor := l_query.execute_new
@@ -368,21 +399,21 @@ feature -- Retrieve (fetch by ...) Operations
 				l_row_cursor.after
 			loop
 				l_row := l_row_cursor.item
-				l_object := a_object.twin
-				Result.force (l_object)
+				create l_result_row
 				if attached {INTEGER_64} l_row.value ((1).as_natural_32) as al_instance_id then
-					l_object.set_instance_id (al_instance_id)
+					check has_result_row: attached {TUPLE} l_result_row as al_result_row then
+						l_result_row := al_result_row.plus ([al_instance_id])
+					end
 				end
 				across
 					2 |..| l_row.count.as_integer_32 as ic
 				loop
-					-- holy crap!!! <-- I want to map each row cursor item to its a_object field,
-					--					but I clearly have no map because the map is buried in the
-					--					a_sql: STRING (above). So, we need an object mapping:
-					--					Query-columns <--> a_object-fields
 					l_index := ic.item
-					l_object.set_field (l_object, a_query.feature_names [ic.item - 1], l_row.value (l_index.as_natural_32))
+					check has_result_row: attached {TUPLE} l_result_row as al_result_row then
+						l_result_row := al_result_row.plus ([l_row.value (l_index.as_natural_32)])
+					end
 				end
+				Result.force (l_result_row)
 				l_row_cursor.forth
 			end
 		end
