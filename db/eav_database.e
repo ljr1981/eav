@@ -217,11 +217,11 @@ feature -- Store Operations
 		do
 			-- entity_name, feature_data (a_object).to_array
 				-- Handle Entity first ...
-			store_entity (a_object.entity_name)
+			store_entity (a_object)
 
 				-- New instance or existing?
 			l_is_new := a_object.instance_id = new_instance_id_constant
-			if a_object.instance_id = new_instance_id_constant then
+			if l_is_new then
 				last_instance_count := next_entity_instance_id (a_object.entity_name)
 				a_object.set_instance_id (last_instance_count)
 				update_entity_instance_count (a_object.entity_name, a_object.instance_id)
@@ -232,15 +232,20 @@ feature -- Store Operations
 			across
 				a_object.feature_data (a_object) as ic_values
 			loop
-				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object.instance_id, l_is_new)
+				store_attribute (ic_values.item.attr_name, ic_values.item.attr_value, a_object, l_is_new)
 			end
+		ensure
+			stored_entity: not a_object.entity_name.is_empty and then a_object.entity_id > 0
 		end
 
 	begin_transaction
 			-- `begin_transaction' on `database'.
 		do
-			database.begin_transaction (False)
+			database.begin_transaction (as_exclusive_transaction)
 		end
+
+	as_exclusive_transaction: BOOLEAN = False
+	as_deferred_transaction: BOOLEAN = True
 
 	end_transaction
 			-- `end_transaction' with `commit' on `database'.
@@ -432,18 +437,18 @@ feature -- Retrieve (fetch by ...) Operations
 
 feature {TEST_SET_BRIDGE} -- Implementation: Entity
 
-	store_entity (a_entity_name: STRING)
+	store_entity (a_object: EAV_DB_ENABLED)
 			-- `store_entity' `a_entity_name'.
 		do
-			if has_entity (a_entity_name) then
+			if has_entity (a_object.entity_name) then
 				do_nothing -- soon: just get the ent_id
 			else
-				store_new_entity (a_entity_name)
-				recently_found_entities.force (a_entity_name, a_entity_name.case_insensitive_hash_code)
+				store_new_entity (a_object.entity_name)
+				recently_found_entities.force (a_object.entity_name, a_object.entity_name.case_insensitive_hash_code)
 			end
-			last_entity_id := entity_id (a_entity_name)
+			a_object.set_entity_id (entity_id (a_object.entity_name))
 		ensure
-			has_entity: has_entity (a_entity_name)
+			has_entity: has_entity (a_object.entity_name) implies a_object.entity_id > 0
 		end
 
 	store_new_entity (a_entity_name: STRING)
@@ -530,7 +535,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Entity
 
 feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 
-	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_entity_id: INTEGER_64; a_is_new: BOOLEAN)
+	store_attribute (a_attribute_name: STRING; a_value: detachable ANY; a_object: EAV_DB_ENABLED; a_is_new: BOOLEAN)
 			-- `store_attribute' named `a_attribute_name' and having (optional) `a_value'.
 		do
 				-- Compute attribute data type
@@ -551,16 +556,16 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			end
 
 				-- Handle storage of attribute meta data
-			store_attribute_name (a_attribute_name, a_entity_id, value_table)
+			store_attribute_name (a_attribute_name, a_object.entity_id, value_table)
 
 				-- Store the actual attribute data
-			store_with_modify_or_insert (value_table, value, last_attribute_id, a_entity_id, a_is_new)
+			store_with_modify_or_insert (value_table, value, last_attribute_id, a_object, a_is_new)
 		end
 
 	value: STRING attribute create Result.make_empty end
 	value_table: STRING attribute create Result.make_empty end
 
-	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id, a_entity_id: INTEGER_64; a_is_new: BOOLEAN)
+	store_with_modify_or_insert (a_table, a_value: STRING; a_attribute_id: INTEGER_64; a_object: EAV_DB_ENABLED; a_is_new: BOOLEAN)
 			-- `store_with_modify_or_insert' of `a_value' for `a_attribute_id' and `a_entity_id'.
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
@@ -573,7 +578,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				l_sql.append_string_general (store_with_insert_2)
 				l_sql.append_string_general (a_attribute_id.out)
 				l_sql.append_character (comma)
-				l_sql.append_string_general (a_entity_id.out)
+				l_sql.append_string_general (a_object.instance_id.out)
 				l_sql.append_string_general (store_with_insert_3)
 				l_sql.append_string_general (a_value)
 				l_sql.append_string_general (store_with_insert_4)
@@ -587,7 +592,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				l_sql.append_string_general (store_with_modify_2)
 				l_sql.append_string_general (a_attribute_id.out)
 				l_sql.append_string_general (store_with_modify_3)
-				l_sql.append_string_general (a_entity_id.out)
+				l_sql.append_string_general (a_object.instance_id.out)
 				l_sql.append_character (semi_colon)
 
 				create l_modify.make (l_sql, database)
@@ -658,20 +663,20 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 	store_attribute_name (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
 			-- `store_entity' `a_name'.
 		do
-			if has_attribute (a_name) then
+			if has_attribute_name_for_entity (a_name, a_entity_id) then
 				do_nothing -- soon: just get the atr_id
 			else
-				store_new_attribute (a_name, a_entity_id, a_value_table)
+				create_new_entity_attribute (a_name, a_entity_id, a_value_table)
 			end
-			last_attribute_id := attribute_id (a_name)
+			last_attribute_id := attribute_id_for_name_entity (a_name, a_entity_id)
 		ensure
-			has_attribute: has_attribute (a_name)
+			has_attribute: has_attribute_name_for_entity (a_name, a_entity_id)
 		end
 
-	store_new_attribute (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
-			-- `store_new_attribute' as `a_name'.
+	create_new_entity_attribute (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
+			-- `create_new_entity_attribute' as `a_name'.
 		require
-			not_has: not has_attribute (a_name)
+			not_has: not has_attribute_name_for_entity (a_name, a_entity_id)
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
 		do
@@ -686,48 +691,55 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
 				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
 				])
-			attributes.force ([attribute_id (a_name), a_entity_id, a_value_table], a_name.case_insensitive_hash_code)
+			attributes.force ([attribute_id_for_name_entity (a_name, a_entity_id), a_entity_id, a_value_table], a_name.case_insensitive_hash_code)
 		end
 
-	has_attribute (a_name: STRING): BOOLEAN
-			-- `has_attribute' `a_name' in attributes table?
+	has_attribute_name_for_entity (a_name: STRING; a_entity_id: INTEGER_64): BOOLEAN
+			-- `has_attribute_name_for_entity' `a_name' in attributes table?
 		local
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
 			Result := attributes.has (a_name.case_insensitive_hash_code)
 			if not Result then
-				l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name)
+				l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name, a_entity_id)
 				l_result.start
 				Result := not l_result.after and then
 							l_result.item.string_value (1).same_string (a_name)
 			end
 		end
 
-	attribute_id (a_name: STRING): INTEGER_64
-			-- `attribute_id' of attribute named `a_name'.
+	attribute_id_for_name_entity (a_name: STRING; a_entity_id: INTEGER_64): INTEGER_64
+			-- `attribute_id_for_name_entity' of attribute named `a_name' for `a_entity_id'.
 		local
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 		do
-			l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name)
+			l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name, a_entity_id)
 			l_result.start
 			Result := l_result.item.integer_64_value (1)
 		end
 
-	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name: STRING): SQLITE_STATEMENT_ITERATION_CURSOR
+	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name: STRING; a_entity_id: INTEGER_64): SQLITE_STATEMENT_ITERATION_CURSOR
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
 			l_sql: STRING
 		do
 			l_sql := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals.twin
+
 			l_sql.append_string_general (a_name)
-			l_sql.append_string_general (close_single_quote_semi_colon)
+			l_sql.append_character (open_single_quote)
+			l_sql.append_string_general (and_kw)
+			l_sql.append_string_general (entity_ent_id_field_name)
+			l_sql.append_string_general (equals)
+			l_sql.append_string_general (a_entity_id.out)
+			l_sql.append_character (semi_colon)
+
 			create l_query.make (l_sql, database)
 			Result := l_query.execute_new
 		end
 
 	last_attribute_id: INTEGER_64
-			-- `last_attribute_id' of last accessed `attribute_id'.
+			-- `last_attribute_id' of last accessed `attribute_id_for_name_entity'.
 
 	recently_found_attributes: HASH_TABLE [STRING, INTEGER]
 			-- `recently_found_attributes'.
@@ -824,6 +836,9 @@ feature {EAV_SYSTEM, EAV_DATA_MANAGER} -- Implementation: Access
 
 	database: SQLITE_DATABASE
 			-- `database'
+
+invariant
+	mutexed: as_exclusive_transaction /= as_deferred_transaction implies not as_exclusive_transaction and as_deferred_transaction
 
 ;note
 	design_intent: "[

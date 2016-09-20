@@ -55,6 +55,9 @@ feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 			Result.append_string_general (generating_type)
 		end
 
+	entity_id: INTEGER_64
+			-- `entity_id' of Current {EAV_DB_ENABLED} object.
+
 	instance_id: INTEGER_64
 			-- `instance_id' of Current {EAV_DB_ENABLED} object.
 
@@ -66,6 +69,14 @@ feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 			instance_id := a_instance_id
 		ensure
 			set: instance_id ~ a_instance_id
+		end
+
+	set_entity_id (a_entity_id: like entity_id)
+			-- `set_entity_id' with `a_entity_id'
+		do
+			entity_id := a_entity_id
+		ensure
+			set: entity_id ~ a_entity_id
 		end
 
 	set_field (a_object: ANY; a_field_name: STRING; a_data: detachable ANY)
