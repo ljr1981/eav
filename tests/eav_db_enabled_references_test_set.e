@@ -79,6 +79,12 @@ feature -- Test routines
 			l_patient.set_first_name_dbe ("my_first_name")
 			l_patient.save_in_database (l_patient, l_system.database_n (1))
 
+			create l_wilma.make_with_reasonable_defaults
+			l_wilma.set_first_name_dbe ("Wilma")
+			l_wilma.set_last_name_dbe ("Flintstone")
+			l_wilma.set_age_dbe (29)
+			l_wilma.save_in_database (l_wilma, l_system.database_n (1))
+
 				-- Clean-up and housekeeping ...
 			l_system.close_all
 			remove_data

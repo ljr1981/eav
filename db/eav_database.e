@@ -61,7 +61,7 @@ feature {EAV_DATA_MANAGER} -- Access: Database Info
 			create Result.make (100)
 		end
 
-	attributes: HASH_TABLE [TUPLE [atr_id, ent_id: INTEGER_64; value_table_name: STRING], INTEGER_32]
+	attributes: HASH_TABLE [TUPLE [atr_id: INTEGER_64; name, value_table_name: STRING], INTEGER_32]
 			-- `attributes' in memory; sync'd with DB.
 		attribute
 			create Result.make (1_000)
@@ -160,7 +160,6 @@ feature {NONE} -- Implementation: EAV Build Operations
 			create l_modify.make (modify_statement ("Attribute", <<create_table_kw, IF_NOT_EXISTS_kw_phrase>>,
 													<<
 													integer_field ("atr_id") + primary_key_kw + ASC_kw + autoincrement_kw,
-													integer_field ("ent_id"),
 													text_field ("atr_uuid"),
 													text_field ("atr_name"),
 													text_field ("atr_value_table"),
@@ -392,7 +391,7 @@ feature -- Retrieve (fetch by ...) Operations
 			end
 
 					-- Now fetch the actual value ...
-			check has_atr_id: attached a_setter.attribute_name.case_insensitive_hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
+			check has_atr_id: attached (a_setter.attribute_name + l_value_table_name).hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
 				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_attributes.atr_id.out + " and object_id = " + a_object_id.out + ";"
 				create l_query.make (l_sql, database)
 				l_cursor := l_query.execute_new
@@ -612,7 +611,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			end
 
 				-- Handle storage of attribute meta data
-			store_attribute_name (a_attribute_name, a_object.entity_id, value_table)
+			store_attribute_name (a_attribute_name, value_table)
 
 				-- Store the actual attribute data
 			store_with_modify_or_insert (value_table, value, last_attribute_id, a_object, a_is_new)
@@ -716,30 +715,28 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			Result.append_string_general (equals)
 		end
 
-	store_attribute_name (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
+	store_attribute_name (a_name: STRING; a_value_table: STRING)
 			-- `store_entity' `a_name'.
 		do
-			if has_attribute_name_for_entity (a_name, a_entity_id) then
-				do_nothing -- soon: just get the atr_id
-			else
-				create_new_entity_attribute (a_name, a_entity_id, a_value_table)
+			if not has_attribute (a_name, a_value_table) then
+				create_new_entity_attribute (a_name, a_value_table)
 			end
-			last_attribute_id := attribute_id_for_name_entity (a_name, a_entity_id)
+			check has_attribute: has_attribute (a_name, a_value_table) end
+			last_attribute_id := attribute_id (a_name, a_value_table)
 		ensure
-			has_attribute: has_attribute_name_for_entity (a_name, a_entity_id)
+			has_last: last_attribute_id > 0
 		end
 
-	create_new_entity_attribute (a_name: STRING; a_entity_id: INTEGER_64; a_value_table: STRING)
+	create_new_entity_attribute (a_name: STRING; a_value_table: STRING)
 			-- `create_new_entity_attribute' as `a_name'.
 		require
-			not_has: not has_attribute_name_for_entity (a_name, a_entity_id)
+			--not_has: not has_attribute_name_for_entity (a_name, a_value_table)
 		local
 			l_insert: SQLITE_INSERT_STATEMENT
 		do
-			create l_insert.make ("INSERT INTO Attribute (ent_id, atr_uuid, atr_name, atr_value_table, is_deleted, modified_date, modifier_id) VALUES (:ENT_ID, :ATR_UUID, :ATR_NAME, :ATR_VAL_TAB, :IS_DEL, :MOD_DATE, :MOD_ID);", database)
+			create l_insert.make ("INSERT INTO Attribute (atr_uuid, atr_name, atr_value_table, is_deleted, modified_date, modifier_id) VALUES (:ATR_UUID, :ATR_NAME, :ATR_VAL_TAB, :IS_DEL, :MOD_DATE, :MOD_ID);", database)
 			check l_insert_is_compiled: l_insert.is_compiled end
 			l_insert.execute_with_arguments ([
-				create {SQLITE_INTEGER_ARG}.make (":ENT_ID", a_entity_id),
 				create {SQLITE_STRING_ARG}.make (":ATR_UUID", uuid.out),
 				create {SQLITE_STRING_ARG}.make (":ATR_NAME", a_name),
 				create {SQLITE_STRING_ARG}.make (":ATR_VAL_TAB", a_value_table),
@@ -747,55 +744,43 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				create {SQLITE_STRING_ARG}.make (":MOD_DATE", (create {DATE_TIME}.make_now).out),
 				create {SQLITE_INTEGER_ARG}.make (":MOD_BY", 1)
 				])
-			attributes.force ([attribute_id_for_name_entity (a_name, a_entity_id), a_entity_id, a_value_table], a_name.case_insensitive_hash_code)
+			attributes.force ([attribute_id (a_name, a_value_table), a_name, a_value_table], (a_name + a_value_table).hash_code)
+		ensure
+			has_attribute (a_name, a_value_table)
 		end
 
-	has_attribute_name_for_entity (a_name: STRING; a_entity_id: INTEGER_64): BOOLEAN
-			-- `has_attribute_name_for_entity' `a_name' in attributes table?
+	has_attribute (a_name, a_value_table: STRING): BOOLEAN
 		local
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_select: SQLITE_QUERY_STATEMENT
+			l_sql: STRING
 		do
-			Result := attributes.has (a_name.case_insensitive_hash_code)
+			Result := attributes.has ( (a_name + a_value_table).hash_code)
 			if not Result then
-				l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name, a_entity_id)
+				l_sql := "SELECT count(*) FROM Attribute WHERE atr_name = '" + a_name + "' and atr_value_table = '" + a_value_table + "';"
+				create l_select.make (l_sql, database)
+				l_result := l_select.execute_new
 				l_result.start
-				Result := not l_result.after and then
-							l_result.item.string_value (1).same_string (a_name)
+				Result := (not l_result.after) and (l_result.item.integer_value (1) = 1)
 			end
 		end
 
-	attribute_id_for_name_entity (a_name: STRING; a_entity_id: INTEGER_64): INTEGER_64
-			-- `attribute_id_for_name_entity' of attribute named `a_name' for `a_entity_id'.
+	attribute_id (a_name, a_value_table: STRING): INTEGER_64
+			-- `attribute_id' for `a_name' and `a_value_table'.
 		local
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_select: SQLITE_QUERY_STATEMENT
+			l_sql: STRING
 		do
-			l_result := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name, a_entity_id)
+			l_sql := "SELECT atr_id FROM Attribute WHERE atr_name = '" + a_name + "' and atr_value_table = '" + a_value_table + "';"
+			create l_select.make (l_sql, database)
+			l_result := l_select.execute_new
 			l_result.start
 			Result := l_result.item.integer_64_value (1)
 		end
 
-	SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals_a_name (a_name: STRING; a_entity_id: INTEGER_64): SQLITE_STATEMENT_ITERATION_CURSOR
-		local
-			l_query: SQLITE_QUERY_STATEMENT
-			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
-			l_sql: STRING
-		do
-			l_sql := SELECT_atr_id_FROM_attribute_WHERE_atr_name_equals.twin
-
-			l_sql.append_string_general (a_name)
-			l_sql.append_character (open_single_quote)
-			l_sql.append_string_general (and_kw)
-			l_sql.append_string_general (entity_ent_id_field_name)
-			l_sql.append_string_general (equals)
-			l_sql.append_string_general (a_entity_id.out)
-			l_sql.append_character (semi_colon)
-
-			create l_query.make (l_sql, database)
-			Result := l_query.execute_new
-		end
-
 	last_attribute_id: INTEGER_64
-			-- `last_attribute_id' of last accessed `attribute_id_for_name_entity'.
+			-- `last_attribute_id' of last accessed `attribute_id'.
 
 	recently_found_attributes: HASH_TABLE [STRING, INTEGER]
 			-- `recently_found_attributes'.
