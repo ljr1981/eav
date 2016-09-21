@@ -76,6 +76,7 @@ feature {EAV_SYSTEM} -- Implementation: EAV Build Operations
 			-- See {EAV_DOCS} for more information.
 		do
 				-- Build Metadata tables ...
+			build_object
 			build_entity
 			build_attribute
 
@@ -105,6 +106,30 @@ feature {NONE} -- Implementation: EAV Build Operations
 			create l_modify.make ("PRAGMA journal_mode = MEMORY;", database)
 			l_modify.execute
 		end
+
+	build_object
+			-- `build_object' table (if needed).
+			-- See {EAV_DOCS} for more information.
+		require
+			not_built_yet: not is_built_once
+		local
+			l_modify: SQLITE_MODIFY_STATEMENT
+		do
+			create l_modify.make (modify_statement ("Object", <<create_table_kw, IF_NOT_EXISTS_kw_phrase>>,
+													<<
+													integer_field ("obj_id") + primary_key_kw + ASC_kw + autoincrement_kw,
+													integer_field ("obj_count"),
+													boolean_field ("is_deleted"),
+													date_field ("modified_date"),
+													integer_field ("modifier_id")
+													>>), database)
+			l_modify.execute
+			create l_modify.make ("INSERT INTO Object (obj_count) VALUES (0);", database)
+			l_modify.execute
+			is_built_once := True
+		end
+
+	is_built_once: BOOLEAN
 
 	build_entity
 			-- `build_entity' table (if needed).
@@ -220,11 +245,16 @@ feature -- Store Operations
 			store_entity (a_object)
 
 				-- New instance or existing?
-			l_is_new := a_object.instance_id = new_instance_id_constant
+			l_is_new := a_object.object_id = new_instance_id_constant
 			if l_is_new then
+					-- Entity-instance count
 				last_instance_count := next_entity_instance_id (a_object.entity_name)
-				a_object.set_instance_id (last_instance_count)
-				update_entity_instance_count (a_object.entity_name, a_object.instance_id)
+				update_entity_instance_count (a_object.entity_name, last_instance_count)
+					-- Object count
+				last_object_count := next_object_instance_id
+				update_object_count (last_object_count)
+
+				a_object.set_object_id (last_object_count)
 			end
 			check not_new_instance: not a_object.is_new end
 
@@ -255,6 +285,25 @@ feature -- Store Operations
 
 feature {NONE} -- Implementation: Store Operations
 
+	next_object_instance_id: INTEGER_64
+			-- `next_object_instance_id' for `a_entity_name'?
+		local
+			l_query: SQLITE_QUERY_STATEMENT
+			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_sql: STRING
+		do
+			l_sql := "SELECT obj_count FROM Object;"
+			create l_query.make (l_sql, database)
+			l_result := l_query.execute_new
+			l_result.start
+			check has_result: not l_result.after then
+				Result := l_result.item.integer_64_value (1) + 1
+			end
+		ensure
+			positive_result: Result > 0
+			incremented: Result > last_object_count
+		end
+
 	next_entity_instance_id (a_entity_name: STRING): INTEGER_64
 			-- `next_entity_instance_id' for `a_entity_name'?
 		local
@@ -282,6 +331,9 @@ feature {NONE} -- Implementation: Store Operations
 			incremented: Result > last_instance_count
 		end
 
+	last_object_count: INTEGER_64
+			-- `last_object_count' of all objects.
+
 	last_instance_count: INTEGER_64
 			-- `last_instance_count' of entity instance id's.
 
@@ -305,6 +357,15 @@ feature {NONE} -- Implementation: Store Operations
 			l_sql.append_character (close_single_quote)
 			l_sql.append_character (semi_colon)
 			create l_modify.make (l_sql, database)
+			l_modify.execute
+		end
+
+	update_object_count (a_new_count: INTEGER_64)
+			-- `update_object_count' with `a_new_count'.
+		local
+			l_modify: SQLITE_MODIFY_STATEMENT
+		do
+			create l_modify.make ("UPDATE Object SET obj_count = " + a_new_count.out + " WHERE obj_id = 1;", database)
 			l_modify.execute
 		end
 
@@ -372,7 +433,7 @@ feature -- Retrieve (fetch by ...) Operations
 					loop
 						if ic_column.cursor_index = 1  then
 							check is_instance_id: attached {INTEGER_64} ic_column.item as al_instance_id then
-								l_object.set_instance_id (al_instance_id)
+								l_object.set_object_id (al_instance_id)
 							end
 						else
 							l_object.set_field (l_object, a_query.feature_names [ic_column.cursor_index - 1], ic_column.item)
@@ -578,7 +639,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				l_sql.append_string_general (store_with_insert_2)
 				l_sql.append_string_general (a_attribute_id.out)
 				l_sql.append_character (comma)
-				l_sql.append_string_general (a_object.instance_id.out)
+				l_sql.append_string_general (a_object.object_id.out)
 				l_sql.append_string_general (store_with_insert_3)
 				l_sql.append_string_general (a_value)
 				l_sql.append_string_general (store_with_insert_4)
@@ -592,7 +653,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				l_sql.append_string_general (store_with_modify_2)
 				l_sql.append_string_general (a_attribute_id.out)
 				l_sql.append_string_general (store_with_modify_3)
-				l_sql.append_string_general (a_object.instance_id.out)
+				l_sql.append_string_general (a_object.object_id.out)
 				l_sql.append_character (semi_colon)
 
 				create l_modify.make (l_sql, database)

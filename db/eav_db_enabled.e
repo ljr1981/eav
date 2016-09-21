@@ -29,7 +29,7 @@ feature -- Implementation: Queries
 	is_new: BOOLEAN
 			-- `is_new'?
 		do
-			Result := instance_id = {EAV_DATABASE}.new_instance_id_constant
+			Result := object_id = {EAV_DATABASE}.new_instance_id_constant
 		end
 
 	is_defaulted: BOOLEAN
@@ -45,7 +45,7 @@ feature -- Storage
 			a_database.store_object (a_object)
 		end
 
-feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
+feature {EAV_DB_ENABLED, EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 
 	entity_name: STRING
 			-- `entity_name' from either `entity_name' (if not empty) or
@@ -58,17 +58,43 @@ feature {EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 	entity_id: INTEGER_64
 			-- `entity_id' of Current {EAV_DB_ENABLED} object.
 
-	instance_id: INTEGER_64
-			-- `instance_id' of Current {EAV_DB_ENABLED} object.
+	object_id: INTEGER_64
+			-- `object_id' of Current {EAV_DB_ENABLED} object.
 
-feature {TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
+	parent_id_dbe: INTEGER_32
+			-- `parent_id_dbe' is a reference ID from one object to another.
+			-- In a DB, the ref is from child up to parent (FK to parent).
+			-- In an object-system, the ref is held at the parent.
+			-- We use but one `parent_id_dbe' because we're taking the DB-view.
 
-	set_instance_id (a_instance_id: like instance_id)
-			-- `set_instance_id' with `a_instance_id'
+feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
+
+	set_object_id (a_instance_id: like object_id)
+			-- `set_object_id' with `a_instance_id'
 		do
-			instance_id := a_instance_id
+			object_id := a_instance_id
 		ensure
-			set: instance_id ~ a_instance_id
+			set: object_id ~ a_instance_id
+		end
+
+	set_parent (a_object: EAV_DB_ENABLED)
+			--
+		do
+			parent_id_dbe := a_object.object_id.to_integer_32
+		end
+
+	set_child (a_object: EAV_DB_ENABLED)
+			--
+		do
+			a_object.set_ref_id_dbe (object_id.to_integer_32)
+		end
+
+	set_ref_id_dbe (a_ref_id_dbe: like parent_id_dbe)
+			-- `set_ref_id_dbe' with `a_ref_id_dbe'
+		do
+			parent_id_dbe := a_ref_id_dbe
+		ensure
+			set: parent_id_dbe ~ a_ref_id_dbe
 		end
 
 	set_entity_id (a_entity_id: like entity_id)

@@ -64,6 +64,10 @@ feature -- Creation Tests
 
 	functions_alltrim_test
 			-- `functions_alltrim_test'
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial/group_1"
 		do
 			assert_strings_equal ("alltrim_inner_spaces_only", "a b c", alltrim(["3323xa b cx2233", "3x2"]))
 			assert_strings_equal ("alltrim_no_spaces_only", "abc", alltrim(["3323xabcx2233", "3x2"]))
@@ -74,6 +78,10 @@ feature -- Creation Tests
 		end
 
 	functions_at_test
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial/group_1"
 		do
 			assert_integers_equal ("at_a_1", 1, at ("a", "abc", 0))
 			assert_integers_equal ("at_b_2", 2, at ("b", "abc", 0))
