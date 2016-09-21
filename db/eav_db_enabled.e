@@ -51,6 +51,11 @@ feature -- Storage
 			a_database.store_object (a_object)
 		end
 
+feature -- Access
+
+	entity_id: INTEGER_64
+			-- `entity_id' of Current {EAV_DB_ENABLED} object.
+
 feature {EAV_DB_ENABLED, EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Storable
 
 	entity_name: STRING
@@ -61,11 +66,17 @@ feature {EAV_DB_ENABLED, EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Stor
 			Result.append_string_general (generating_type)
 		end
 
-	entity_id: INTEGER_64
-			-- `entity_id' of Current {EAV_DB_ENABLED} object.
-
 	object_id: INTEGER_64
 			-- `object_id' of Current {EAV_DB_ENABLED} object.
+
+feature -- Setters
+
+	set_database (a_database: EAV_DATABASE)
+		do
+			database := a_database
+		ensure
+			set: database ~ a_database
+		end
 
 feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 
@@ -95,6 +106,8 @@ feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Sette
 					Exectution --> Exception handling ... --> Ensure both "Disable catcall ..."
 					are checked to disable catcall detection (for the time being).
 			]"
+		require
+			has_database: has_database
 		do
 			across
 				dbe_enabled_setter_features (a_object) as ic_setters
@@ -125,7 +138,16 @@ feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Sette
 							ic_setters.item.setter_agent.call ([al_data.to_integer_8])
 						else
 							-- We now have potential reference object
-							ic_setters.item.setter_agent.call ([Void])
+							if al_data > 0 then
+								check has_reference:
+									attached database as al_database and then
+										attached al_database.fetch_with_object_id (al_data) as al_reference
+								then
+									ic_setters.item.setter_agent.call ([al_reference])
+								end
+							else
+								ic_setters.item.setter_agent.call ([Void])
+							end
 						end
 					elseif attached {REAL} a_data as al_data then
 						ic_setters.item.setter_agent.call ([al_data])
@@ -305,7 +327,7 @@ feature {NONE} -- Implementation: Feature lists
 					elseif attached {EAV_DB_ENABLED} l_field then
 						l_type_value := REFERENCE_value_type_code
 					else
-						check unknown_type: False end
+						check unknown_type_in_EAV_DB_ENABLED_db_features: False end
 					end
 					Result.force ([db_feature_agent (ic_counter.item, a_object), remove_suffixes (al_name), l_type_value], al_name)
 				end

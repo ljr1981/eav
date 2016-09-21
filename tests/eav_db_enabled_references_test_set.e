@@ -43,12 +43,7 @@ feature -- Test routines
 				"execution/serial"
 		local
 			l_fred,
-			l_wilma,
-			l_barney,
-			l_betty,
-			l_pebbles,
-			l_bambam,
-			l_parent: MOCK_OBJECT
+			l_wilma: MOCK_OBJECT
 
 			l_product: MOCK_PRODUCT
 
@@ -98,16 +93,11 @@ feature -- Test routines
 				"execution/serial"
 		local
 			l_fred,
-			l_wilma,
-			l_barney,
-			l_betty,
-			l_pebbles,
-			l_bambam,
-			l_parent: MOCK_OBJECT
+			l_wilma: MOCK_OBJECT
 
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER
-			l_results: ARRAYED_LIST [MOCK_OBJECT]
+			l_results: ARRAYED_LIST [EAV_DB_ENABLED]
 			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
 		do
 			create l_system.make ("system", test_data_path)
@@ -126,21 +116,23 @@ feature -- Test routines
 			l_wilma.set_age_dbe (29)
 			l_wilma.save_in_database (l_wilma, l_system.database_n (1))
 
-			create l_barney.make_with_reasonable_defaults
-			l_barney.set_first_name_dbe ("Barney")
-			l_barney.set_last_name_dbe ("Rubble")
-			l_barney.set_age_dbe (29)
-			l_barney.save_in_database (l_barney, l_system.database_n (1))
-
-			create l_betty.make_with_reasonable_defaults
-			l_betty.set_first_name_dbe ("Betty")
-			l_betty.set_last_name_dbe ("Rubble")
-			l_betty.set_age_dbe (29)
-			l_betty.save_in_database (l_betty, l_system.database_n (1))
-
 				-- First reference!
 			l_fred.set_spouse_dbe (l_wilma)
 			l_fred.save_in_database (l_fred, l_system.database_n (1))
+
+				-- Void everything and start over from the DB
+			create l_fred.make_with_reasonable_defaults
+			l_fred.set_database (l_system.database_n (1))
+			l_wilma := Void
+
+--			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_fred, l_manager.SELECT_all_columns_with_filters (l_fred, <<["age", "=", "30", ""]>>))
+--			assert_integers_equal ("has_fred", 1, l_results.count)
+--			check has_fred: attached {MOCK_OBJECT} l_results [1] as al_fred then
+--				l_fred := al_fred
+--				check has_wilma: attached {MOCK_OBJECT} al_fred.spouse_dbe as al_wilma then
+--					l_wilma := al_wilma
+--				end
+--			end
 
 				-- Clean-up and housekeeping ...
 			l_system.close_all

@@ -365,6 +365,11 @@ feature {NONE} -- Implementation: Store Operations
 
 feature -- Retrieve (fetch by ...) Operations
 
+	fetch_with_object_id (a_object_id: INTEGER_64): detachable EAV_DB_ENABLED
+		do
+			check fetch_object_id: False end
+		end
+
 	fetch_by_object_id (a_entity_id: INTEGER_64; a_setter: TUPLE [setter_agent: PROCEDURE [detachable ANY]; attribute_name: STRING; setter_type_code: INTEGER]; a_object_id: INTEGER_64)
 			-- fetch_by_object_id --> object
 		local
@@ -391,6 +396,7 @@ feature -- Retrieve (fetch by ...) Operations
 				l_value_table_name := "Value_integer"
 			else
 				l_value_table_name := "Value_text"
+				check unknown_a_setter_dot_setter_type_code_in_EAV_DATABASE_fetch_by_object_id: False end
 			end
 
 					-- Now fetch the actual value ...
@@ -421,6 +427,7 @@ feature -- Retrieve (fetch by ...) Operations
 								-- Locate the object of the reference
 								-- Load it
 								-- Set it into the setter
+								check do_we_really_need_to: False end
 							end
 					else
 						a_setter.setter_agent.call ([l_cursor.item.value (1)])
