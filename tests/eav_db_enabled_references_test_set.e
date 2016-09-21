@@ -44,7 +44,12 @@ feature -- Test routines
 		local
 			l_fred,
 			l_wilma,
+			l_barney,
+			l_betty,
+			l_pebbles,
+			l_bambam,
 			l_parent: MOCK_OBJECT
+
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER
 			l_results: ARRAYED_LIST [MOCK_OBJECT]
@@ -69,7 +74,23 @@ feature -- Test routines
 			l_fred.set_child (l_wilma)
 			l_fred.save_in_database (l_fred, l_system.database_n (1))
 			l_wilma.save_in_database (l_wilma, l_system.database_n (1))
-			
+
+			create l_barney.make_with_reasonable_defaults
+			l_barney.set_first_name_dbe ("Barney")
+			l_barney.set_last_name_dbe ("Rubble")
+			l_barney.set_age_dbe (29)
+			l_barney.save_in_database (l_barney, l_system.database_n (1))
+
+			create l_betty.make_with_reasonable_defaults
+			l_betty.set_first_name_dbe ("Betty")
+			l_betty.set_last_name_dbe ("Rubble")
+			l_betty.set_age_dbe (29)
+			l_betty.save_in_database (l_betty, l_system.database_n (1))
+
+			l_barney.set_child (l_betty)
+			l_barney.save_in_database (l_barney, l_system.database_n (1))
+			l_betty.save_in_database (l_betty, l_system.database_n (1))
+
 				-- Clean-up and housekeeping ...
 			l_system.close_all
 			remove_data
