@@ -35,6 +35,55 @@ inherit
 
 feature -- Test routines
 
+	multi_mock_type_tests
+			-- New test routine
+		note
+			testing:
+				"execution/isolated",
+				"execution/serial"
+		local
+			l_fred,
+			l_wilma,
+			l_barney,
+			l_betty,
+			l_pebbles,
+			l_bambam,
+			l_parent: MOCK_OBJECT
+
+			l_product: MOCK_PRODUCT
+
+			l_patient: MOCK_PATIENT
+
+			l_system: EAV_SYSTEM
+			l_manager: EAV_DATA_MANAGER
+			l_results: ARRAYED_LIST [MOCK_OBJECT]
+			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
+		do
+			create l_system.make ("system", test_data_path)
+			create l_manager
+			l_manager.set_database (l_system.database_n (1))
+
+			create l_fred.make_with_reasonable_defaults
+			l_fred.set_first_name_dbe ("Fred")
+			l_fred.set_last_name_dbe ("Flintstone")
+			l_fred.set_age_dbe (30)
+			l_fred.save_in_database (l_fred, l_system.database_n (1))
+
+			create l_product.make_with_reasonable_defaults
+			l_product.set_make_dbe ("my_make")
+			l_product.set_model_dbe ("my_model")
+			l_product.set_count_dbe (1_000)
+			l_product.save_in_database (l_product, l_system.database_n (1))
+
+			create l_patient.make_with_reasonable_defaults
+			l_patient.set_first_name_dbe ("my_first_name")
+			l_patient.save_in_database (l_patient, l_system.database_n (1))
+
+				-- Clean-up and housekeeping ...
+			l_system.close_all
+			remove_data
+		end
+
 	reference_object_tests
 			-- New test routine
 		note

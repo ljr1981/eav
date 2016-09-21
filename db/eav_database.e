@@ -248,13 +248,10 @@ feature -- Store Operations
 			l_is_new := a_object.object_id = new_object_id_constant
 			if l_is_new then
 					-- Entity-instance count
-				last_instance_count := next_entity_instance_id (a_object.entity_name)
-				update_entity_instance_count (a_object.entity_name, last_instance_count)
+				update_entity_instance_count (a_object.entity_name, next_entity_id (a_object.entity_name))
 					-- Object count
-				last_object_count := next_object_id
-				update_object_count (last_object_count)
-
-				a_object.set_object_id (last_object_count)
+				a_object.set_object_id (next_object_id)
+				update_object_count (a_object.object_id)
 			end
 			check not_new_instance: not a_object.is_new end
 
@@ -301,11 +298,10 @@ feature {NONE} -- Implementation: Store Operations
 			end
 		ensure
 			positive_result: Result > 0
-			incremented: Result > last_object_count
 		end
 
-	next_entity_instance_id (a_entity_name: STRING): INTEGER_64
-			-- `next_entity_instance_id' for `a_entity_name'?
+	next_entity_id (a_entity_name: STRING): INTEGER_64
+			-- `next_entity_id' for `a_entity_name'?
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
@@ -328,7 +324,6 @@ feature {NONE} -- Implementation: Store Operations
 			end
 		ensure
 			positive_result: Result > 0
-			incremented: Result > last_instance_count
 		end
 
 	last_object_count: INTEGER_64
