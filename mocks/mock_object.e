@@ -32,6 +32,8 @@ feature -- Access
 	age_dbe: INTEGER
 			-- `age_dbe', which is database enabled (dbe).
 
+	spouse_dbe: detachable EAV_DB_ENABLED
+
 feature {TEST_SET_BRIDGE} -- Keys
 
 	first_last_dbe_pk: STRING

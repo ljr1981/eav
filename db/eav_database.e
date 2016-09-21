@@ -372,6 +372,7 @@ feature -- Retrieve (fetch by ...) Operations
 			l_sql,
 			l_value_table_name: STRING
 			l_cursor: SQLITE_STATEMENT_ITERATION_CURSOR
+			l_atr_name: STRING
 		do
 				-- Fetch the atr_value_table for entity_id and attribute name ...
 			inspect
@@ -386,21 +387,41 @@ feature -- Retrieve (fetch by ...) Operations
 				l_value_table_name := "Value_text"
 			when BLOB_value_type_code then
 				l_value_table_name := "Value_blob"
+			when REFERENCE_value_type_code then
+				l_value_table_name := "Value_integer"
 			else
 				l_value_table_name := "Value_text"
 			end
 
 					-- Now fetch the actual value ...
-			check has_atr_id: attached (a_setter.attribute_name + l_value_table_name).hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
+			l_atr_name := a_setter.attribute_name
+			check has_atr_id: attached (l_atr_name + l_value_table_name).hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
 				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_attributes.atr_id.out + " and object_id = " + a_object_id.out + ";"
 				create l_query.make (l_sql, database)
 				l_cursor := l_query.execute_new
 				l_cursor.start
 				if not l_cursor.after then
-					if attached {INTEGER_32} l_cursor.item.value (1) as al_integer then
-						a_setter.setter_agent.call ([al_integer])
-					elseif attached {INTEGER_64} l_cursor.item.value (1) as al_integer_64 then
-						a_setter.setter_agent.call ([al_integer_64.as_integer_32])
+					if
+							attached {INTEGER_32} l_cursor.item.value (1) as al_integer and then
+							a_setter.setter_type_code = INTEGER_value_type_code
+						then
+							a_setter.setter_agent.call ([al_integer])
+					elseif
+							attached {INTEGER_64} l_cursor.item.value (1) as al_integer_64 and then
+							a_setter.setter_type_code = INTEGER_value_type_code
+						then
+							a_setter.setter_agent.call ([al_integer_64.as_integer_32])
+					elseif
+							attached {INTEGER_64} l_cursor.item.value (1) as al_ref_integer_64 and then
+							a_setter.setter_type_code = REFERENCE_value_type_code
+						then
+							if al_ref_integer_64 = 0 then
+								a_setter.setter_agent.call ([Void]) -- This is a Void or NULL reference object
+							else
+								-- Locate the object of the reference
+								-- Load it
+								-- Set it into the setter
+							end
 					else
 						a_setter.setter_agent.call ([l_cursor.item.value (1)])
 					end
@@ -606,6 +627,10 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 				value_table := integer_value_table_name; value := al_value.to_integer.out
 			elseif attached {CHARACTER} a_value as al_value then
 				value_table := text_value_table_name; value := al_value.out
+			elseif attached {EAV_DB_ENABLED} a_value as al_value then
+				value_table := integer_value_table_name; value := al_value.object_id.out
+			elseif not attached {ANY} a_value then
+				value_table := integer_value_table_name; value := (0).out
 			else
 				check unknown_data_type: False end
 			end

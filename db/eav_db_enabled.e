@@ -121,8 +121,11 @@ feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Sette
 							ic_setters.item.setter_agent.call ([al_data.to_integer_32])
 						elseif ic_setters.item.setter_agent.valid_arguments ([al_data.to_integer_16]) then
 							ic_setters.item.setter_agent.call ([al_data.to_integer_16])
-						else
+						elseif ic_setters.item.setter_agent.valid_arguments ([al_data.to_integer_8]) then
 							ic_setters.item.setter_agent.call ([al_data.to_integer_8])
+						else
+							-- We now have potential reference object
+							ic_setters.item.setter_agent.call ([Void])
 						end
 					elseif attached {REAL} a_data as al_data then
 						ic_setters.item.setter_agent.call ([al_data])
@@ -297,6 +300,8 @@ feature {NONE} -- Implementation: Feature lists
 						l_type_value := TEXT_value_type_code
 					elseif attached {CHARACTER} l_field then
 						l_type_value := TEXT_value_type_code
+					elseif not attached {ANY} l_field then
+						l_type_value := REFERENCE_value_type_code
 					else
 						check unknown_type: False end
 					end
