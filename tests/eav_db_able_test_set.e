@@ -46,14 +46,14 @@ feature -- Creation Tests
 			create l_mock.make_with_reasonable_defaults
 
 				-- Ensure *_dbe fields are working for "getters" ...
-			assert_integers_equal ("field_count", 4, l_mock.dbe_enabled_features (l_mock).count)
+			assert_integers_equal ("field_count", 3, l_mock.dbe_enabled_features (l_mock).count)
 			assert_booleans_equal ("first_name", True, l_mock.dbe_enabled_features (l_mock).has_key ("first_name_dbe"))
 			assert_booleans_equal ("last_name", True, l_mock.dbe_enabled_features (l_mock).has_key ("last_name_dbe"))
 			assert_strings_equal ("last_name", "last_name", l_mock.dbe_enabled_features (l_mock).iteration_item (1).feature_name)
 			assert_booleans_equal ("age_dbe", True, l_mock.dbe_enabled_features (l_mock).has_key ("age_dbe"))
 
 				-- Ensure *_dbe feilds are working for "setters" ...
-			assert_integers_equal ("setter_count", 4, l_mock.dbe_enabled_setter_features (l_mock).count)
+			assert_integers_equal ("setter_count", 3, l_mock.dbe_enabled_setter_features (l_mock).count)
 
 		end
 
@@ -234,7 +234,7 @@ feature -- Creation Tests
 
 feature {NONE} -- Testing: SELECT support
 
-	select_test_string: STRING = "SELECT p1.object_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS parent_id,p4.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.object_id = p2.object_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.object_id = p3.object_id AND p3.atr_id = 3 JOIN Value_integer AS p4 ON p1.object_id = p4.object_id AND p4.atr_id = 4    WHERE  p1.object_id = 1  GROUP BY p1.object_id;"
+	select_test_string: STRING = "SELECT p1.object_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.object_id = p2.object_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.object_id = p3.object_id AND p3.atr_id = 3    WHERE  p1.object_id = 1  GROUP BY p1.object_id;"
 
 feature {NONE} -- Test Support
 

@@ -126,10 +126,6 @@ feature -- Test routines
 			l_wilma.set_age_dbe (29)
 			l_wilma.save_in_database (l_wilma, l_system.database_n (1))
 
-			l_fred.set_child (l_wilma)
-			l_fred.save_in_database (l_fred, l_system.database_n (1))
-			l_wilma.save_in_database (l_wilma, l_system.database_n (1))
-
 			create l_barney.make_with_reasonable_defaults
 			l_barney.set_first_name_dbe ("Barney")
 			l_barney.set_last_name_dbe ("Rubble")
@@ -140,10 +136,6 @@ feature -- Test routines
 			l_betty.set_first_name_dbe ("Betty")
 			l_betty.set_last_name_dbe ("Rubble")
 			l_betty.set_age_dbe (29)
-			l_betty.save_in_database (l_betty, l_system.database_n (1))
-
-			l_barney.set_child (l_betty)
-			l_barney.save_in_database (l_barney, l_system.database_n (1))
 			l_betty.save_in_database (l_betty, l_system.database_n (1))
 
 				-- Clean-up and housekeeping ...

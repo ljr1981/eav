@@ -24,7 +24,7 @@ feature {NONE} -- Initialization
 		deferred
 		end
 
-feature -- Implementation: Queries
+feature -- Queries
 
 	is_new: BOOLEAN
 			-- `is_new'?
@@ -35,6 +35,12 @@ feature -- Implementation: Queries
 	is_defaulted: BOOLEAN
 			-- `is_defaulted'?
 			-- True when awaiting: A) Data load from DB or B) Cleansed for caching.
+
+	has_database: BOOLEAN
+			--
+		do
+			Result := attached database
+		end
 
 feature -- Storage
 
@@ -61,12 +67,6 @@ feature {EAV_DB_ENABLED, EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Stor
 	object_id: INTEGER_64
 			-- `object_id' of Current {EAV_DB_ENABLED} object.
 
-	parent_id_dbe: INTEGER_32
-			-- `parent_id_dbe' is a reference ID from one object to another.
-			-- In a DB, the ref is from child up to parent (FK to parent).
-			-- In an object-system, the ref is held at the parent.
-			-- We use but one `parent_id_dbe' because we're taking the DB-view.
-
 feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 
 	set_object_id (a_object_id: like object_id)
@@ -75,26 +75,6 @@ feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Sette
 			object_id := a_object_id
 		ensure
 			set: object_id ~ a_object_id
-		end
-
-	set_parent (a_object: EAV_DB_ENABLED)
-			--
-		do
-			parent_id_dbe := a_object.object_id.to_integer_32
-		end
-
-	set_child (a_object: EAV_DB_ENABLED)
-			--
-		do
-			a_object.set_ref_id_dbe (object_id.to_integer_32)
-		end
-
-	set_ref_id_dbe (a_ref_id_dbe: like parent_id_dbe)
-			-- `set_ref_id_dbe' with `a_ref_id_dbe'
-		do
-			parent_id_dbe := a_ref_id_dbe
-		ensure
-			set: parent_id_dbe ~ a_ref_id_dbe
 		end
 
 	set_entity_id (a_entity_id: like entity_id)
