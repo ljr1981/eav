@@ -234,7 +234,7 @@ feature -- Creation Tests
 
 feature {NONE} -- Testing: SELECT support
 
-	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS age,p4.val_item AS parent_id FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3 JOIN Value_integer AS p4 ON p1.instance_id = p4.instance_id AND p4.atr_id = 4    WHERE  p1.instance_id = 1  GROUP BY p1.instance_id;"
+	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS parent_id,p4.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3 JOIN Value_integer AS p4 ON p1.instance_id = p4.instance_id AND p4.atr_id = 4    WHERE  p1.instance_id = 1  GROUP BY p1.instance_id;"
 
 feature {NONE} -- Test Support
 
