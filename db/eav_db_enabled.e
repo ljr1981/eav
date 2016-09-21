@@ -302,6 +302,8 @@ feature {NONE} -- Implementation: Feature lists
 						l_type_value := TEXT_value_type_code
 					elseif not attached {ANY} l_field then
 						l_type_value := REFERENCE_value_type_code
+					elseif attached {EAV_DB_ENABLED} l_field then
+						l_type_value := REFERENCE_value_type_code
 					else
 						check unknown_type: False end
 					end

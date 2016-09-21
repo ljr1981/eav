@@ -44,6 +44,14 @@ feature {TEST_SET_BRIDGE} -- Keys
 
 feature -- Setters
 
+	set_spouse_dbe (a_spouse_dbe: like spouse_dbe)
+			-- `set_spouse_dbe' with `a_spouse_dbe'
+		do
+			spouse_dbe := a_spouse_dbe
+		ensure
+			set: spouse_dbe ~ a_spouse_dbe
+		end
+
 	set_first_name_dbe (a_first_name: like first_name_dbe)
 			-- `set_first_name_dbe' with `a_first_name'
 		do

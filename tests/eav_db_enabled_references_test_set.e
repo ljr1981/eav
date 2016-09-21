@@ -138,6 +138,10 @@ feature -- Test routines
 			l_betty.set_age_dbe (29)
 			l_betty.save_in_database (l_betty, l_system.database_n (1))
 
+				-- First reference!
+			l_fred.set_spouse_dbe (l_wilma)
+			l_fred.save_in_database (l_fred, l_system.database_n (1))
+
 				-- Clean-up and housekeeping ...
 			l_system.close_all
 			remove_data
