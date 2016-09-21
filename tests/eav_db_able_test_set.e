@@ -109,7 +109,7 @@ feature -- Creation Tests
 			l_mock.set_age_dbe (1)
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
-			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.SELECT_all_columns_with_filters (l_mock, <<["p1.instance_id", "=", "1", ""]>>).text)
+			assert_strings_equal ("SQL_SELECT", select_test_string, l_manager.SELECT_all_columns_with_filters (l_mock, <<["p1.object_id", "=", "1", ""]>>).text)
 
 			l_system.close_all
 			remove_data
@@ -221,11 +221,11 @@ feature -- Creation Tests
 			create l_mock.make_with_reasonable_defaults
 			l_TUPLE_Results := l_manager.database.fetch_tuples_by_select (l_mock, l_manager.select_some_columns_with_filters (l_mock, <<"age">>, <<["age", "=", "30", ""]>>))
 			assert_integers_equal ("some_TUPLE_two_object_1", 2, l_TUPLE_Results.count)
-			if attached {TUPLE} l_TUPLE_Results.at (1) as al_inner and then attached {INTEGER} al_inner.at (1) as al_instance_id then
-				assert_integers_equal ("instance_id_is_1", 1, al_instance_id)
+			if attached {TUPLE} l_TUPLE_Results.at (1) as al_inner and then attached {INTEGER} al_inner.at (1) as al_object_id then
+				assert_integers_equal ("object_id_is_1", 1, al_object_id)
 			end
-			if attached {TUPLE} l_TUPLE_Results.at (2) as al_inner and then attached {INTEGER} al_inner.at (1) as al_instance_id then
-				assert_integers_equal ("instance_id_is_2", 3, al_instance_id)
+			if attached {TUPLE} l_TUPLE_Results.at (2) as al_inner and then attached {INTEGER} al_inner.at (1) as al_object_id then
+				assert_integers_equal ("object_id_is_2", 3, al_object_id)
 			end
 
 			l_system.close_all
@@ -234,7 +234,7 @@ feature -- Creation Tests
 
 feature {NONE} -- Testing: SELECT support
 
-	select_test_string: STRING = "SELECT p1.instance_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS parent_id,p4.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.instance_id = p2.instance_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.instance_id = p3.instance_id AND p3.atr_id = 3 JOIN Value_integer AS p4 ON p1.instance_id = p4.instance_id AND p4.atr_id = 4    WHERE  p1.instance_id = 1  GROUP BY p1.instance_id;"
+	select_test_string: STRING = "SELECT p1.object_id, p1.val_item AS first_name,p2.val_item AS last_name,p3.val_item AS parent_id,p4.val_item AS age FROM Attribute JOIN Value_text AS p1 ON p1.atr_id = 1 JOIN Value_text AS p2 ON p1.object_id = p2.object_id AND p2.atr_id = 2 JOIN Value_integer AS p3 ON p1.object_id = p3.object_id AND p3.atr_id = 3 JOIN Value_integer AS p4 ON p1.object_id = p4.object_id AND p4.atr_id = 4    WHERE  p1.object_id = 1  GROUP BY p1.object_id;"
 
 feature {NONE} -- Test Support
 

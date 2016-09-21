@@ -73,7 +73,7 @@ feature -- Testing: EAV writing
 			create l_end.make_now
 			print ("start: " + l_start.fine_second.out + "%N")
 			print ("end:   " + l_end.fine_second.out + "%N")
-			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 2.1) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
+			assert_32 ("10x_not_less", (l_end.fine_second - l_start.fine_second) < 2.7) -- 0.8421 */- = 0.08421/object = 712/objects-per-minute
 
 			l_system.close_all
 			remove_data

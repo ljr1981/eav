@@ -11,6 +11,9 @@ feature -- Constants
 	new_instance_id_constant: INTEGER_64 = 0
 			-- `new_instance_id_constant' is how Current recognizes "new" Entity instances.
 
+	new_object_id_constant: INTEGER_64 = 0
+			-- `new_object_id_constant' is how Current recognizes "new" Object instances.
+
 	AND_kw: STRING = " AND "
 	ASC_kw: STRING = " ASC "
 	AUTOINCREMENT_kw: STRING = " AUTOINCREMENT "
@@ -61,6 +64,7 @@ feature -- Constants
 	value_val_item_field_name: STRING = "val_item"
 	sys_id_field_name: STRING = "sys_id"
 	instance_id_field_name: STRING = "instance_id"
+	object_id_field_name: STRING = "object_id"
 
 	is_deleted_field_name: STRING = "is_deleted"
 	modified_date_field_name: STRING = "modified_date"

@@ -54,7 +54,7 @@ feature -- Basic Operations
 			across
 				a_object.dbe_enabled_setter_features (a_object) as ic_setters
 			loop
-				database.fetch_by_instance_id (a_ent_id, ic_setters.item, a_id)
+				database.fetch_by_object_id (a_ent_id, ic_setters.item, a_id)
 			end
 		end
 
@@ -226,10 +226,10 @@ feature {NONE} -- SELECT: Support
 
 feature {NONE} -- SELECT: Support - Constants
 
-	SELECT_from_database_template_string: STRING = "SELECT p1.instance_id, <<DATA_COLUMNS>> FROM Attribute <<JOINS>> <<WHERE_CLAUSE>> GROUP BY p1.instance_id"
+	SELECT_from_database_template_string: STRING = "SELECT p1.object_id, <<DATA_COLUMNS>> FROM Attribute <<JOINS>> <<WHERE_CLAUSE>> GROUP BY p1.object_id"
 	Data_column_template_string: STRING = "p<<FLD_NO>>.val_item AS <<FLD_NAME>>"
 	JOIN_clause_p1_template_string: STRING = "JOIN <<TABLE_NAME>> AS p1 ON p1.atr_id = <<ATR_ID>> "
-	JOIN_clause_pn_template_string: STRING = "JOIN <<TABLE_NAME>> AS p<<FLD_NO>> ON p1.instance_id = p<<FLD_NO>>.instance_id AND p<<FLD_NO>>.atr_id = <<ATR_ID>> "
+	JOIN_clause_pn_template_string: STRING = "JOIN <<TABLE_NAME>> AS p<<FLD_NO>> ON p1.object_id = p<<FLD_NO>>.object_id AND p<<FLD_NO>>.atr_id = <<ATR_ID>> "
 
 feature -- Access
 

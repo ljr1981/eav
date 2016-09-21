@@ -205,7 +205,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 													<<
 													integer_field ("val_id") + primary_key_kw + ASC_kw + autoincrement_kw,
 													integer_field ("atr_id"),
-													integer_field ("instance_id"),
+													integer_field ("object_id"),
 													l_last_result.twin,
 													boolean_field ("is_deleted"),
 													date_field ("modified_date"),
@@ -219,7 +219,7 @@ feature {NONE} -- Implementation: EAV Build Operations
 			l_modify.execute
 		end
 
-	create_index_sql: STRING = "CREATE UNIQUE INDEX <<TABLE_NAME>>_atr_instance ON <<TABLE_NAME>> (atr_id, instance_id);"
+	create_index_sql: STRING = "CREATE UNIQUE INDEX <<TABLE_NAME>>_atr_instance ON <<TABLE_NAME>> (atr_id, object_id);"
 
 feature -- Store Operations
 
@@ -245,13 +245,13 @@ feature -- Store Operations
 			store_entity (a_object)
 
 				-- New instance or existing?
-			l_is_new := a_object.object_id = new_instance_id_constant
+			l_is_new := a_object.object_id = new_object_id_constant
 			if l_is_new then
 					-- Entity-instance count
 				last_instance_count := next_entity_instance_id (a_object.entity_name)
 				update_entity_instance_count (a_object.entity_name, last_instance_count)
 					-- Object count
-				last_object_count := next_object_instance_id
+				last_object_count := next_object_id
 				update_object_count (last_object_count)
 
 				a_object.set_object_id (last_object_count)
@@ -285,8 +285,8 @@ feature -- Store Operations
 
 feature {NONE} -- Implementation: Store Operations
 
-	next_object_instance_id: INTEGER_64
-			-- `next_object_instance_id' for `a_entity_name'?
+	next_object_id: INTEGER_64
+			-- `next_object_id' for `a_entity_name'?
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_result: SQLITE_STATEMENT_ITERATION_CURSOR
@@ -371,8 +371,8 @@ feature {NONE} -- Implementation: Store Operations
 
 feature -- Retrieve (fetch by ...) Operations
 
-	fetch_by_instance_id (a_entity_id: INTEGER_64; a_setter: TUPLE [setter_agent: PROCEDURE [detachable ANY]; attribute_name: STRING; setter_type_code: INTEGER]; a_instance_id: INTEGER_64)
-			-- fetch_by_instance_id --> object
+	fetch_by_object_id (a_entity_id: INTEGER_64; a_setter: TUPLE [setter_agent: PROCEDURE [detachable ANY]; attribute_name: STRING; setter_type_code: INTEGER]; a_object_id: INTEGER_64)
+			-- fetch_by_object_id --> object
 		local
 			l_query: SQLITE_QUERY_STATEMENT
 			l_sql,
@@ -398,7 +398,7 @@ feature -- Retrieve (fetch by ...) Operations
 
 					-- Now fetch the actual value ...
 			check has_atr_id: attached a_setter.attribute_name.case_insensitive_hash_code as al_key and then attached attributes.at (al_key) as al_attributes then
-				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_attributes.atr_id.out + " and instance_id = " + a_instance_id.out + ";"
+				l_sql := "SELECT val_item FROM " + l_value_table_name + " WHERE atr_id = " + al_attributes.atr_id.out + " and object_id = " + a_object_id.out + ";"
 				create l_query.make (l_sql, database)
 				l_cursor := l_query.execute_new
 				l_cursor.start
@@ -432,8 +432,8 @@ feature -- Retrieve (fetch by ...) Operations
 						al_column as ic_column
 					loop
 						if ic_column.cursor_index = 1  then
-							check is_instance_id: attached {INTEGER_64} ic_column.item as al_instance_id then
-								l_object.set_object_id (al_instance_id)
+							check is_object_id: attached {INTEGER_64} ic_column.item as al_object_id then
+								l_object.set_object_id (al_object_id)
 							end
 						else
 							l_object.set_field (l_object, a_query.feature_names [ic_column.cursor_index - 1], ic_column.item)
@@ -466,9 +466,9 @@ feature -- Retrieve (fetch by ...) Operations
 			loop
 				l_row := l_row_cursor.item
 				create l_result_row
-				if attached {INTEGER_64} l_row.value ((1).as_natural_32) as al_instance_id then
+				if attached {INTEGER_64} l_row.value ((1).as_natural_32) as al_object_id then
 					check has_result_row: attached {TUPLE} l_result_row as al_result_row then
-						l_result_row := al_result_row.plus ([al_instance_id])
+						l_result_row := al_result_row.plus ([al_object_id])
 					end
 				end
 				across
@@ -675,7 +675,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 			Result.append_character (open_parenthesis)
 			Result.append_string_general (attribute_atr_id_field_name.twin)
 			Result.append_character (comma)
-			Result.append_string_general (instance_id_field_name)
+			Result.append_string_general (object_id_field_name)
 			Result.append_character (comma)
 			Result.append_string_general (value_val_item_field_name)
 			Result.append_character (close_parenthesis)
@@ -717,7 +717,7 @@ feature {TEST_SET_BRIDGE} -- Implementation: Attribute
 	store_with_modify_3: STRING
 		once
 			Result := AND_kw.twin
-			Result.append_string_general (instance_id_field_name)
+			Result.append_string_general (object_id_field_name)
 			Result.append_string_general (equals)
 		end
 

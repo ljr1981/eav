@@ -29,7 +29,7 @@ feature -- Implementation: Queries
 	is_new: BOOLEAN
 			-- `is_new'?
 		do
-			Result := object_id = {EAV_DATABASE}.new_instance_id_constant
+			Result := object_id = {EAV_DATABASE}.new_object_id_constant
 		end
 
 	is_defaulted: BOOLEAN
@@ -69,12 +69,12 @@ feature {EAV_DB_ENABLED, EAV_DATABASE, EAV_DATA_MANAGER} -- Implementation: Stor
 
 feature {EAV_DB_ENABLED, TEST_SET_BRIDGE, EAV_DATABASE} -- Implementation: Setters
 
-	set_object_id (a_instance_id: like object_id)
-			-- `set_object_id' with `a_instance_id'
+	set_object_id (a_object_id: like object_id)
+			-- `set_object_id' with `a_object_id'
 		do
-			object_id := a_instance_id
+			object_id := a_object_id
 		ensure
-			set: object_id ~ a_instance_id
+			set: object_id ~ a_object_id
 		end
 
 	set_parent (a_object: EAV_DB_ENABLED)
