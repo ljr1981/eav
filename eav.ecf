@@ -16,7 +16,6 @@
 		<setting name="console_application" value="true"/>
 		<library name="base" location="$ISE_LIBRARY\library\base\base-safe.ecf"/>
 		<library name="decimal" location="$ISE_LIBRARY\contrib\library\math\decimal\decimal\decimal-safe.ecf"/>
-		<library name="framework" location="..\framework\framework.ecf"/>
 		<library name="json_ext" location="..\json_ext\json_ext.ecf"/>
 		<library name="randomizer" location="..\randomizer\randomizer.ecf"/>
 		<library name="sqlite" location="$ISE_LIBRARY\unstable\library\persistency\database\sqlite3\sqlite-safe.ecf"/>
