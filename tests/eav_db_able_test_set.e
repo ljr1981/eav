@@ -37,9 +37,7 @@ feature -- Creation Tests
 	creation_and_setter_tests
 			-- `db_able_creation_tests'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_mock: MOCK_OBJECT
 		do
@@ -60,15 +58,15 @@ feature -- Creation Tests
 	setters_tests
 			-- `setters_tests'.
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
 		do
+			remove_data
 			create l_system.make ("system", test_data_path)
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 
 			check attached {attached like tuple_anchor} l_mock.dbe_enabled_setter_features (l_mock).item ("age_dbe") as al_tuple then
 				al_tuple.setter_agent.call ([27])
@@ -91,9 +89,7 @@ feature -- Creation Tests
 
 	test_SELECT_generation
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_mock: MOCK_OBJECT
 			l_system: EAV_SYSTEM
@@ -117,9 +113,7 @@ feature -- Creation Tests
 
 	test_SELECT_operation
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_mock: MOCK_OBJECT
 			l_system: EAV_SYSTEM
@@ -127,6 +121,7 @@ feature -- Creation Tests
 			l_results: ARRAYED_LIST [EAV_DB_ENABLED]
 			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
 		do
+			remove_data
 			create l_system.make ("system", test_data_path)
 			create l_manager
 			l_manager.set_database (l_system.database_n (1))
@@ -144,6 +139,7 @@ feature -- Creation Tests
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_all_columns_with_filters (l_mock, <<>>))
 
 			assert_integers_equal ("two_objects", 2, l_results.count)
@@ -160,6 +156,7 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_all_columns_with_filters (l_mock, <<["first_name", "=", "'Fred'", ""]>>))
 
 			assert_integers_equal ("one_object", 1, l_results.count)
@@ -171,6 +168,7 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_all_columns_with_filters (l_mock, <<["age", "=", "30", ""]>>))
 
 			assert_integers_equal ("one_object_2", 1, l_results.count)
@@ -182,12 +180,14 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_mock.set_first_name_dbe ("Barney")
 			l_mock.set_last_name_dbe ("Rubble")
 			l_mock.set_age_dbe (30)
 			l_mock.save_in_database (l_mock, l_system.database_n (1))
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_mock.set_first_name_dbe ("Betty")
 			l_mock.set_last_name_dbe ("Rubble")
 			l_mock.set_age_dbe (29)
@@ -195,6 +195,7 @@ feature -- Creation Tests
 
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_all_columns_with_filters (l_mock, <<["age", "=", "30", ""]>>))
 
 			assert_integers_equal ("two_object_2", 2, l_results.count)
@@ -211,14 +212,17 @@ feature -- Creation Tests
 			end
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_some_columns_with_filters (l_mock, <<>>, <<["age", "=", "30", ""]>>))
 			assert_integers_equal ("some_two_object_1", 2, l_results.count)
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_results := l_manager.database.fetch_Object_list_by_SELECT (l_mock, l_manager.SELECT_some_columns_with_filters (l_mock, <<"*">>, <<["age", "=", "30", ""]>>))
 			assert_integers_equal ("some_two_object_2", 2, l_results.count)
 
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_TUPLE_Results := l_manager.database.fetch_tuples_by_select (l_mock, l_manager.select_some_columns_with_filters (l_mock, <<"age">>, <<["age", "=", "30", ""]>>))
 			assert_integers_equal ("some_TUPLE_two_object_1", 2, l_TUPLE_Results.count)
 			if attached {TUPLE} l_TUPLE_Results.at (1) as al_inner and then attached {INTEGER} al_inner.at (1) as al_object_id then
@@ -245,18 +249,18 @@ feature -- Storable Tests
 	db_enabled_store_tests
 			-- `db_enabled_store_tests'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT
 		do
 				-- Prep work ...
+			remove_data
 			create l_system.make ("system", test_data_path)
 
 				-- Create Bugsy boy ...
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_mock.set_first_name_dbe ("Bugs")
 			l_mock.set_last_name_dbe ("Bunny")
 			l_mock.set_age_dbe (74)
@@ -270,9 +274,7 @@ feature -- Storable Tests
 	two_entities_tests
 			-- `two_entities_tests'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_bugs,
@@ -303,9 +305,7 @@ feature -- Storable Tests
 	changing_object_data_tests
 			-- `changing_object_data_tests'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_mock: MOCK_OBJECT

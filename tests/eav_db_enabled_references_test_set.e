@@ -38,9 +38,7 @@ feature -- Test routines
 	multi_mock_type_tests
 			-- New test routine
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_fred,
 			l_wilma: MOCK_OBJECT
@@ -54,6 +52,7 @@ feature -- Test routines
 			l_results: ARRAYED_LIST [MOCK_OBJECT]
 			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
 		do
+			remove_data
 			create l_system.make ("system", test_data_path)
 			create l_manager
 			l_manager.set_database (l_system.database_n (1))
@@ -88,9 +87,7 @@ feature -- Test routines
 	reference_object_tests
 			-- New test routine
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_fred,
 			l_wilma: MOCK_OBJECT
@@ -100,6 +97,7 @@ feature -- Test routines
 			l_results: ARRAYED_LIST [EAV_DB_ENABLED]
 			l_TUPLE_Results: ARRAYED_LIST [TUPLE]
 		do
+			remove_data
 			create l_system.make ("system", test_data_path)
 			create l_manager
 			l_manager.set_database (l_system.database_n (1))

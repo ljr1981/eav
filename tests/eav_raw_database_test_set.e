@@ -33,9 +33,7 @@ feature -- Testing raw writing
 	raw_write_test
 			-- `raw_write_test'.
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_database: detachable SQLITE_DATABASE
 			l_sql: STRING

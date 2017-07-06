@@ -43,6 +43,8 @@ feature -- Generic Testing
 		end
 
 	hash_test
+		note
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_list: HASH_TABLE [STRING, INTEGER]
 			l_name: STRING
@@ -61,6 +63,8 @@ feature -- Generic Testing
 
 	grapheme_conversion_tests
 			-- `grapheme_conversion_tests' determines if grapheme-based hashing works as-billed!
+		note
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_graph: EAV_GRAPHEME
 			l_result: ARRAYED_LIST [INTEGER_32]
@@ -130,6 +134,8 @@ feature -- Generic Testing
 
 	grapheme_uniqueness_test
 			-- `grapheme_uniqueness_test' testing uniqueness of twos, threes, and fours.
+		note
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_graph: EAV_GRAPHEME
 			l_grapheme_1,
@@ -185,6 +191,8 @@ feature -- Generic Testing
 
 	primes_testing
 			-- `general_testing' proving that we have Prime numbers.
+		note
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_graph: EAV_GRAPHEME
 		do

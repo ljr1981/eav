@@ -40,12 +40,11 @@ feature -- Creation Tests
 	eav_system_tests
 			-- `eav_system_tests'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 		do
+			remove_data
 			create l_system.make ("system", test_data_path)
 			l_system.close_all
 			remove_data
@@ -65,9 +64,7 @@ feature -- Creation Tests
 	functions_alltrim_test
 			-- `functions_alltrim_test'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		do
 			assert_strings_equal ("alltrim_inner_spaces_only", "a b c", alltrim(["3323xa b cx2233", "3x2"]))
 			assert_strings_equal ("alltrim_no_spaces_only", "abc", alltrim(["3323xabcx2233", "3x2"]))
@@ -79,9 +76,7 @@ feature -- Creation Tests
 
 	functions_at_test
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		do
 			assert_integers_equal ("at_a_1", 1, at ("a", "abc", 0))
 			assert_integers_equal ("at_b_2", 2, at ("b", "abc", 0))

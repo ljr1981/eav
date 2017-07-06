@@ -35,19 +35,19 @@ feature -- Test routines
 	fetch_by_id_test
 			-- `fetch_by_id_test'.
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER
 			l_mock: MOCK_OBJECT
 		do
 				-- Prep work ...
+			remove_data
 			create l_system.make ("system", test_data_path)
 
 				-- Create Foghorn ...
 			create l_mock.make_with_reasonable_defaults
+			l_mock.set_database (l_system.database_n (1))
 			l_mock.set_first_name_dbe ("Foghorn")
 			l_mock.set_last_name_dbe ("Leghorn")
 			l_mock.set_age_dbe (35)

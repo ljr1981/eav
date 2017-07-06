@@ -43,9 +43,7 @@ feature -- Testing: EAV writing
 	write_test
 			-- `write_test'
 		note
-			testing:
-				"execution/isolated",
-				"execution/serial/group_1"
+			testing: "execution/isolated", "execution/serial"
 		local
 			l_system: EAV_SYSTEM
 			l_manager: EAV_DATA_MANAGER
@@ -55,6 +53,7 @@ feature -- Testing: EAV writing
 			l_mocks: ARRAYED_LIST [MOCK_OBJECT]
 		do
 				-- Prep work ...
+			remove_data
 			create l_system.make ("system", test_data_path)
 
 				-- 10x test of 3x dbe features ...
