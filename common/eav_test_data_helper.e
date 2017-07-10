@@ -29,7 +29,17 @@ feature {NONE} -- Implementation
 
 feature {EQA_TEST_SET} -- Implementation: Constants
 
-	test_data_path: STRING = "\tests\data\"
+	test_data_path: STRING
 			-- `test_data_path' location on file system.
+		local
+			l_oe: OPERATING_ENVIRONMENT
+		once
+			create l_oe
+			Result := l_oe.directory_separator.out
+			Result.append_string_general ("tests")
+			Result.append_character (l_oe.directory_separator)
+			Result.append_string_general ("data")
+			Result.append_character (l_oe.directory_separator)
+		end
 
 end

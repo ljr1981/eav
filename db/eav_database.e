@@ -30,14 +30,21 @@ feature {NONE} -- Initialization
 			-- `make' at `a_location' (uri, file-spec, etc) using `a_file_name'.
 			-- For now: This feature presumes a file-based database system.
 		require
+			not_empty: not a_location.is_empty
 			real_location: (create {DIRECTORY}.make_open_read ((create {EXECUTION_ENVIRONMENT}).current_working_path.name.out + a_location)).exists
 		local
 			l_full_path: STRING
+			l_oe: OPERATING_ENVIRONMENT
 		do
+			create l_oe
 			l_full_path := (create {EXECUTION_ENVIRONMENT}).current_working_path.name.out
-			l_full_path.append_character ('\')
+			if a_location.item (1) /= l_oe.directory_separator then
+				l_full_path.append_character (l_oe.directory_separator)
+			end
 			l_full_path.append (a_location.out)
-			l_full_path.append_character ('\')
+			if a_location.item (a_location.count) /= l_oe.directory_separator then
+				l_full_path.append_character (l_oe.directory_separator)
+			end
 			l_full_path.append (a_file_name.out)
 			l_full_path.append_character ('.')
 			l_full_path.append (extension)
